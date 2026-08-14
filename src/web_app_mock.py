@@ -1,269 +1,874 @@
-# src/web_app_demo.py
 from flask import Flask, request, jsonify, render_template_string
-import os
 
 app = Flask(__name__)
 
-# 🔹 Página principal: diseño profesional y atractivo
-@app.route('/')
-def home():
-    html = """
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>🩺 Golden Detect Anemic</title>
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-        <style>
-            body {
-                font-family: 'Roboto', sans-serif;
-                margin: 0;
-                background: #f9fbfd;
-                color: #333;
-                line-height: 1.6;
-            }
-            .container {
-                max-width: 900px;
-                margin: 0 auto;
-                padding: 20px;
-            }
-            header {
-                text-align: center;
-                padding: 40px 20px;
-                background: linear-gradient(135deg, #1e88e5, #42a5f5);
-                color: white;
-                border-radius: 12px;
-                margin-bottom: 30px;
-                box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-            }
-            header h1 {
-                margin: 0;
-                font-size: 2.5em;
-                font-weight: 500;
-            }
-            header p {
-                margin: 10px 0 0;
-                font-size: 1.1em;
-                opacity: 0.9;
-            }
-            .upload-section {
-                background: white;
-                padding: 30px;
-                border-radius: 12px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-                text-align: center;
-                margin-bottom: 30px;
-            }
-            .upload-area {
-                border: 3px dashed #42a5f5;
-                padding: 40px 20px;
-                border-radius: 10px;
-                margin: 20px auto;
-                max-width: 400px;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-            .upload-area:hover {
-                border-color: #1e88e5;
-                background: #f0f8ff;
-            }
-            .upload-area p {
-                margin: 0;
-                color: #1e88e5;
-                font-weight: 500;
-            }
-            button {
-                padding: 12px 30px;
-                font-size: 16px;
-                background: #1e88e5;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-                margin-top: 15px;
-                font-weight: 500;
-            }
-            button:hover {
-                background: #1976d2;
-            }
-            #preview {
-                max-width: 100%;
-                height: 200px;
-                object-fit: cover;
-                margin: 20px auto;
-                border-radius: 8px;
-                display: none;
-                border: 1px solid #ddd;
-            }
-            .result {
-                margin: 20px auto;
-                padding: 20px;
-                border-radius: 10px;
-                font-weight: bold;
-                font-size: 1.2em;
-                max-width: 500px;
-                text-align: center;
-            }
-            .anemia {
-                background-color: #ffebee;
-                color: #c62828;
-                border: 1px solid #ef9a9a;
-            }
-            .normal {
-                background-color: #e8f5e8;
-                color: #2e7d32;
-                border: 1px solid #a5d6a7;
-            }
-            .info {
-                background: white;
-                padding: 30px;
-                border-radius: 12px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-                text-align: center;
-            }
-            .info h2 {
-                color: #1e88e5;
-                margin-top: 0;
-            }
-            .info p {
-                font-size: 1.1em;
-                color: #555;
-            }
-            .team {
-                margin-top: 15px;
-                font-style: italic;
-                color: #666;
-            }
-            .footer {
-                text-align: center;
-                margin-top: 40px;
-                color: #888;
-                font-size: 0.9em;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <header>
-                <h1>🩺 Golden Detect Anemic</h1>
-                <p>Detención temprana de anemia mediante visión por computadora</p>
-            </header>
+html = """
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-            <div class="upload-section">
-                <h2>🔍 Sube una imagen de la conjuntiva ocular</h2>
-                <p>El sistema analizará la palidez de la mucosa para estimar riesgo de anemia.</p>
+    <title>Anemia Detector</title>
 
-                <div class="upload-area" onclick="document.getElementById('image').click()">
-                    <p>📷 Haz clic para seleccionar una imagen</p>
-                </div>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-                <input type="file" id="image" accept="image/*" style="display: none;" onchange="previewImage(event)">
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7fb;
+            color: #172033;
+        }
+
+        .topbar {
+            background: #ffffff;
+            border-bottom: 1px solid #e8edf5;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .topbar-content {
+            max-width: 1000px;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: #e9f2ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .status {
+            background: #eaf8ef;
+            color: #18864b;
+            border-radius: 20px;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: auto;
+            padding: 25px 16px 45px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #1769e0, #4b9cff);
+            color: white;
+            border-radius: 24px;
+            padding: 35px 25px;
+            margin-bottom: 22px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            right: -60px;
+            top: -60px;
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: 32px;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 650px;
+            line-height: 1.6;
+            opacity: 0.94;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.18);
+            padding: 7px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(20, 40, 80, 0.06);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 21px;
+        }
+
+        .subtitle {
+            color: #667085;
+            font-size: 14px;
+            margin-top: 0;
+        }
+
+        .warning {
+            background: #fff8e6;
+            border: 1px solid #ffe2a8;
+            border-radius: 14px;
+            padding: 15px;
+            margin: 18px 0;
+            color: #76530a;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .warning strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .upload-area {
+            border: 2px dashed #b7c9e8;
+            border-radius: 18px;
+            padding: 30px 18px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            background: #fafcff;
+        }
+
+        .upload-area:hover {
+            border-color: #2878e8;
+            background: #f3f8ff;
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        .upload-area h3 {
+            margin: 5px 0;
+            font-size: 17px;
+        }
+
+        .upload-area p {
+            margin: 5px 0;
+            color: #667085;
+            font-size: 13px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            flex: 1;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .primary {
+            background: #1769e0;
+            color: white;
+        }
+
+        .primary:hover {
+            background: #1257bd;
+        }
+
+        .secondary {
+            background: #edf3fc;
+            color: #1769e0;
+        }
+
+        .secondary:hover {
+            background: #dfeafb;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #preview-container {
+            display: none;
+            margin-top: 18px;
+            text-align: center;
+        }
+
+        #preview {
+            width: 100%;
+            max-height: 330px;
+            object-fit: contain;
+            border-radius: 15px;
+            background: #f1f3f6;
+            border: 1px solid #e2e6ec;
+        }
+
+        .preview-label {
+            font-size: 12px;
+            color: #667085;
+            margin-top: 7px;
+        }
+
+        #result {
+            display: none;
+            margin-top: 20px;
+            border-radius: 17px;
+            padding: 22px;
+            text-align: center;
+        }
+
+        .result-normal {
+            background: #edf9f1;
+            border: 1px solid #b8e5c6;
+            color: #166534;
+        }
+
+        .result-anemia {
+            background: #fff0f0;
+            border: 1px solid #f2b8b8;
+            color: #b42318;
+        }
+
+        .result-warning {
+            background: #fff8e6;
+            border: 1px solid #ffe0a3;
+            color: #8a5a00;
+        }
+
+        .result-icon {
+            font-size: 42px;
+            margin-bottom: 5px;
+        }
+
+        .result-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .confidence {
+            font-size: 16px;
+            margin-top: 8px;
+        }
+
+        .result-note {
+            font-size: 12px;
+            margin-top: 13px;
+            opacity: 0.8;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .feature {
+            background: #f8faff;
+            border: 1px solid #edf1f7;
+            border-radius: 15px;
+            padding: 18px;
+        }
+
+        .feature-icon {
+            font-size: 25px;
+        }
+
+        .feature h3 {
+            font-size: 15px;
+            margin: 8px 0 5px;
+        }
+
+        .feature p {
+            font-size: 12px;
+            color: #667085;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .disclaimer {
+            background: #f8f9fb;
+            border-radius: 15px;
+            padding: 16px;
+            font-size: 12px;
+            color: #667085;
+            line-height: 1.6;
+        }
+
+        footer {
+            text-align: center;
+            color: #8a94a6;
+            font-size: 12px;
+            padding: 10px;
+        }
+
+        .counter {
+            text-align: center;
+            color: #667085;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+
+        @media (max-width: 650px) {
+
+            .hero {
+                padding: 27px 20px;
+                border-radius: 20px;
+            }
+
+            .hero h1 {
+                font-size: 27px;
+            }
+
+            .card {
+                padding: 18px;
+                border-radius: 17px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            .topbar-content {
+                padding: 0;
+            }
+
+            .status {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <div class="topbar-content">
+
+            <div class="brand">
+                <div class="brand-icon">🩺</div>
+                <span>Anemia Detector</span>
+            </div>
+
+            <div class="status">
+                ● PROTOTIPO
+            </div>
+
+        </div>
+    </div>
+
+    <main class="container">
+
+        <section class="hero">
+
+            <div class="badge">
+                INTELIGENCIA ARTIFICIAL
+            </div>
+
+            <h1>Detección visual de anemia</h1>
+
+            <p>
+                Anemia Detector es un prototipo que utiliza visión por computadora
+                para analizar imágenes de la conjuntiva palpebral inferior y
+                proporcionar una estimación visual.
+            </p>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>📷 Analizar una imagen</h2>
+
+            <p class="subtitle">
+                Selecciona una fotografía o utiliza la cámara de tu dispositivo.
+            </p>
+
+            <div class="warning">
+
+                <strong>⚠️ Importante antes de tomar la foto</strong>
+
+                Asegúrate de que la fotografía muestre claramente
+                la <b>conjuntiva palpebral inferior</b> del ojo.
+                Evita fotografías oscuras, borrosas o con demasiados reflejos.
+
+            </div>
+
+
+            <label class="upload-area" for="image">
+
+                <div class="upload-icon">📸</div>
+
+                <h3>Seleccionar fotografía</h3>
+
+                <p>
+                    Toca aquí para elegir una imagen
+                    desde tu dispositivo.
+                </p>
+
+            </label>
+
+
+            <input
+                type="file"
+                id="image"
+                accept="image/*"
+                capture="environment"
+                onchange="previewImage(event)"
+            >
+
+
+            <div id="preview-container">
+
                 <img id="preview" src="" alt="Vista previa">
 
-                <button onclick="analyze()">Analizar Imagen</button>
-
-                <div id="result"></div>
-            </div>
-
-            <div class="info">
-                <h2>🎯 Nuestra Misión</h2>
-                <p>
-                    En <strong>Golden</strong>, buscamos democratizar el acceso al diagnóstico temprano de anemia, 
-                    especialmente en zonas rurales o con pocos recursos médicos.
-                </p>
-                <p>
-                    Nuestro sistema utiliza inteligencia artificial para analizar imágenes del ojo y detectar signos visuales de anemia, 
-                    ayudando a médicos, enfermeras y comunidades a actuar antes.
-                </p>
-                <div class="team">
-                    — Equipo Golden, comprometido con la salud equitativa 🌍
+                <div class="preview-label">
+                    Vista previa de la fotografía seleccionada
                 </div>
+
             </div>
 
-            <div class="footer">
-                <p>Golden Detect Anemic © 2025</p>
+
+            <div class="buttons">
+
+                <button
+                    class="secondary"
+                    onclick="openCamera()"
+                >
+                    📷 Tomar fotografía
+                </button>
+
+                <button
+                    class="primary"
+                    id="analyzeButton"
+                    onclick="analyze()"
+                    disabled
+                >
+                    🔍 Analizar imagen
+                </button>
+
             </div>
-        </div>
 
-        <script>
-            function previewImage(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.getElementById('preview');
-                    img.src = e.target.result;
-                    img.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
 
-            async function analyze() {
-                const fileInput = document.getElementById('image');
-                const file = fileInput.files[0];
-                if (!file) {
-                    showResult('⚠️ Por favor, sube una imagen', 'normal');
-                    return;
-                }
+            <div class="counter" id="counter">
+                Imágenes analizadas: 0
+            </div>
 
-                const resultDiv = document.getElementById('result');
-                resultDiv.innerHTML = "🧪 Analizando imagen...";
-                resultDiv.className = "result normal";
 
-                // Simular tiempo de procesamiento
-                await new Promise(r => setTimeout(r, 2000));
+            <div id="result"></div>
 
-                // Obtener el nombre del archivo
-                const filename = file.name.toLowerCase();
+        </section>
 
-                let result, confidence;
 
-                if (filename.includes('c')) {
-                    // Con anemia
-                    result = '🔴 Anemia Detectada';
-                    confidence = Math.random() * 15 + 80; // 80-95%
-                } else if (filename.includes('s')) {
-                    // Sin anemia
-                    result = '🟢 Sin Anemia';
-                    confidence = Math.random() * 13 + 85; // 85-98%
-                } else {
-                    // Resultado no claro
-                    result = '🟡 Resultado no claro';
-                    confidence = Math.floor(Math.random() * 10) + 50; // 50-59%
-                }
+        <section class="card">
 
-                const cls = result.includes('anemia') ? 'anemia' : 'normal';
-                showResult(`<strong>${result}</strong><br>Confianza: ${confidence.toFixed(2)}%`, cls);
-            }
+            <h2>¿Cómo funciona?</h2>
 
-            function showResult(msg, cls) {
-                const div = document.getElementById('result');
-                div.innerHTML = msg;
-                div.className = 'result ' + cls;
-            }
-        </script>
-    </body>
-    </html>
-    """
+            <p class="subtitle">
+                El prototipo está diseñado para facilitar una primera orientación.
+            </p>
+
+            <div class="features">
+
+                <div class="feature">
+
+                    <div class="feature-icon">📱</div>
+
+                    <h3>1. Captura</h3>
+
+                    <p>
+                        El usuario toma o selecciona una fotografía
+                        de la conjuntiva palpebral inferior.
+                    </p>
+
+                </div>
+
+
+                <div class="feature">
+
+                    <div class="feature-icon">🧠</div>
+
+                    <h3>2. Análisis</h3>
+
+                    <p>
+                        El sistema procesa la imagen y genera
+                        un resultado de manera automática.
+                    </p>
+
+                </div>
+
+
+                <div class="feature">
+
+                    <div class="feature-icon">📊</div>
+
+                    <h3>3. Resultado</h3>
+
+                    <p>
+                        Se muestra una estimación visual junto
+                        con un porcentaje de confianza.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>🎯 ¿Por qué Anemia Detector?</h2>
+
+            <p class="subtitle">
+
+                El propósito del proyecto es brindar una alternativa
+                tecnológica sencilla que pueda servir como apoyo
+                para identificar posibles casos que requieran
+                una evaluación médica.
+
+            </p>
+
+            <p class="subtitle">
+
+                La herramienta busca ser especialmente útil como
+                orientación inicial para personas que tienen
+                dificultades para acceder rápidamente a un
+                establecimiento de salud.
+
+            </p>
+
+        </section>
+
+
+        <section class="card">
+
+            <div class="disclaimer">
+
+                <b>⚠️ Aviso importante:</b>
+
+                Anemia Detector es un prototipo educativo y no reemplaza
+                un análisis de sangre, una evaluación médica ni un diagnóstico
+                profesional. Un resultado positivo debe ser confirmado
+                mediante una evaluación realizada por personal de salud.
+
+            </div>
+
+        </section>
+
+
+        <footer>
+
+            Anemia Detector © 2026<br>
+            Prototipo educativo de inteligencia artificial
+
+        </footer>
+
+    </main>
+
+
+<script>
+
+    let selectedFile = null;
+
+    /*
+        Contador de demostración.
+
+        Funcionamiento:
+        imágenes 1 y 2  -> SIN ANEMIA
+        imágenes 3 y 4  -> ANEMIA
+        imágenes 5 y 6  -> SIN ANEMIA
+        imágenes 7 y 8  -> ANEMIA
+        ...
+
+        No depende del nombre de la fotografía.
+    */
+
+    let analysisCount = 0;
+
+
+    function openCamera() {
+
+        const input = document.getElementById("image");
+
+        input.setAttribute("capture", "environment");
+
+        input.click();
+
+    }
+
+
+    function previewImage(event) {
+
+        const file = event.target.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        selectedFile = file;
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+
+            const preview = document.getElementById("preview");
+            const container = document.getElementById("preview-container");
+            const button = document.getElementById("analyzeButton");
+
+            preview.src = e.target.result;
+
+            container.style.display = "block";
+
+            button.disabled = false;
+
+            hideResult();
+
+        };
+
+        reader.readAsDataURL(file);
+
+    }
+
+
+    async function analyze() {
+
+        if (!selectedFile) {
+
+            showResult(
+                "⚠️",
+                "Selecciona una imagen",
+                "Debes subir una fotografía antes de realizar el análisis.",
+                "",
+                "warning"
+            );
+
+            return;
+        }
+
+
+        const resultDiv = document.getElementById("result");
+
+        resultDiv.style.display = "block";
+
+        resultDiv.className = "result-warning";
+
+        resultDiv.innerHTML = `
+            <div class="result-icon">🧪</div>
+            <div class="result-title">Analizando imagen...</div>
+            <div>Procesando la fotografía.</div>
+        `;
+
+
+        const button = document.getElementById("analyzeButton");
+
+        button.disabled = true;
+
+
+        await new Promise(resolve => setTimeout(resolve, 1200));
+
+
+        analysisCount++;
+
+
+        let result;
+        let confidence;
+        let type;
+
+
+        /*
+            Cada grupo contiene dos resultados:
+
+            1, 2  -> sin anemia
+            3, 4  -> anemia
+            5, 6  -> sin anemia
+            7, 8  -> anemia
+
+            Fórmula:
+            (analysisCount - 1) % 4
+
+            0 o 1 = sin anemia
+            2 o 3 = anemia
+        */
+
+        const position = (analysisCount - 1) % 4;
+
+
+        if (position < 2) {
+
+            result = "SIN ANEMIA";
+            confidence = 94.5;
+            type = "normal";
+
+        } else {
+
+            result = "ANEMIA DETECTADA";
+            confidence = 91.8;
+            type = "anemia";
+
+        }
+
+
+        if (type === "normal") {
+
+            showResult(
+                "🟢",
+                result,
+                "No se identificaron signos visuales compatibles con anemia en esta demostración.",
+                confidence,
+                "normal"
+            );
+
+        } else {
+
+            showResult(
+                "🔴",
+                result,
+                "Se identificaron características visuales compatibles con posible anemia.",
+                confidence,
+                "anemia"
+            );
+
+        }
+
+
+        document.getElementById("counter").innerText =
+            "Imágenes analizadas: " + analysisCount;
+
+
+        button.disabled = false;
+
+    }
+
+
+    function showResult(icon, title, description, confidence, type) {
+
+        const resultDiv = document.getElementById("result");
+
+        resultDiv.style.display = "block";
+
+        resultDiv.className = "result-" + type;
+
+
+        let confidenceHTML = "";
+
+        if (confidence !== "") {
+
+            confidenceHTML = `
+                <div class="confidence">
+                    Confianza estimada: <b>${confidence}%</b>
+                </div>
+            `;
+
+        }
+
+
+        resultDiv.innerHTML = `
+
+            <div class="result-icon">${icon}</div>
+
+            <div class="result-title">
+                ${title}
+            </div>
+
+            <div>
+                ${description}
+            </div>
+
+            ${confidenceHTML}
+
+            <div class="result-note">
+                Resultado correspondiente al prototipo de demostración.
+            </div>
+
+        `;
+
+    }
+
+
+    function hideResult() {
+
+        const resultDiv = document.getElementById("result");
+
+        resultDiv.style.display = "none";
+
+        resultDiv.innerHTML = "";
+
+    }
+
+</script>
+
+</body>
+</html>
+"""
+
+
+@app.route('/')
+def home():
     return render_template_string(html)
 
-# 🔹 Ruta para predicción (simulada)
+
 @app.route('/predict', methods=['POST'])
 def predict():
-    # Simulamos un análisis real (pero no hacemos nada)
-    import random
-    if random.random() < 0.7:
-        result = '🟢 Sin anemia'
-        confidence = random.random() * 13 + 85  # 85-98%
-    else:
-        result = '🔴 Anemia Detectada'
-        confidence = random.random() * 15 + 80  # 80-95%
+
+    """
+    Ruta de demostración.
+
+    No utiliza random y no depende del nombre del archivo.
+
+    La secuencia se maneja principalmente desde JavaScript
+    para que cada usuario pueda realizar su propia demostración.
+    """
 
     return jsonify({
-        'result': result,
-        'confidence': confidence
+        "status": "ok",
+        "message": "Prototipo Anemia Detector funcionando correctamente."
     })
+
 
 if __name__ == '__main__':
     app.run(debug=True)
