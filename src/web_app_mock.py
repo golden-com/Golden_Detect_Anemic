@@ -5,36 +5,58 @@ app = Flask(__name__)
 html = """
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Anemia Detector</title>
 
     <style>
+
         * {
             box-sizing: border-box;
         }
 
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f4f7fb;
-            color: #172033;
+        :root {
+            --primary: #1769e0;
+            --primary-dark: #0d4fb8;
+            --primary-light: #eef5ff;
+            --text: #172033;
+            --muted: #667085;
+            --border: #e5eaf2;
+            --background: #f5f7fb;
+            --white: #ffffff;
         }
 
+        body {
+            margin: 0;
+            font-family: Inter, Arial, Helvetica, sans-serif;
+            background: var(--background);
+            color: var(--text);
+        }
+
+        /* =========================
+           TOPBAR
+        ========================= */
+
         .topbar {
-            background: #ffffff;
-            border-bottom: 1px solid #e8edf5;
-            padding: 15px 20px;
+            height: 72px;
+            background: rgba(255,255,255,0.96);
+            border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 50;
+            backdrop-filter: blur(12px);
         }
 
         .topbar-content {
-            max-width: 1000px;
+            max-width: 1080px;
+            height: 100%;
             margin: auto;
+            padding: 0 20px;
+
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -43,848 +65,1238 @@ html = """
         .brand {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-weight: bold;
-            font-size: 20px;
+            gap: 11px;
+
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
         }
 
         .brand-icon {
             width: 42px;
             height: 42px;
-            border-radius: 12px;
-            background: #e9f2ff;
+
+            border-radius: 13px;
+
             display: flex;
             align-items: center;
             justify-content: center;
+
+            background: var(--primary-light);
+
             font-size: 22px;
         }
 
         .status {
-            background: #eaf8ef;
-            color: #18864b;
-            border-radius: 20px;
-            padding: 7px 12px;
-            font-size: 12px;
-            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            background: #eefaf3;
+            color: #16834a;
+
+            padding: 8px 13px;
+
+            border-radius: 30px;
+
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .4px;
         }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #20a15a;
+        }
+
+        /* =========================
+           CONTENEDOR
+        ========================= */
 
         .container {
             width: 100%;
-            max-width: 1000px;
+            max-width: 1080px;
+
             margin: auto;
-            padding: 25px 16px 45px;
+
+            padding: 30px 18px 50px;
         }
 
+        /* =========================
+           HERO
+        ========================= */
+
         .hero {
-            background: linear-gradient(135deg, #1769e0, #4b9cff);
-            color: white;
-            border-radius: 24px;
-            padding: 35px 25px;
-            margin-bottom: 22px;
             position: relative;
             overflow: hidden;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0d4fb8 0%,
+                    #1769e0 45%,
+                    #4b9cff 100%
+                );
+
+            color: white;
+
+            border-radius: 28px;
+
+            padding: 48px 42px;
+
+            margin-bottom: 24px;
+
+            box-shadow:
+                0 18px 45px rgba(23,105,224,.20);
+        }
+
+        .hero::before {
+            content: "";
+
+            position: absolute;
+
+            width: 280px;
+            height: 280px;
+
+            border-radius: 50%;
+
+            background: rgba(255,255,255,.08);
+
+            right: -90px;
+            top: -100px;
         }
 
         .hero::after {
             content: "";
+
             position: absolute;
-            width: 180px;
-            height: 180px;
+
+            width: 150px;
+            height: 150px;
+
             border-radius: 50%;
-            background: rgba(255,255,255,0.08);
-            right: -60px;
-            top: -60px;
+
+            background: rgba(255,255,255,.05);
+
+            right: 120px;
+            bottom: -90px;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+
+            max-width: 720px;
+        }
+
+        .badge {
+            display: inline-flex;
+
+            align-items: center;
+
+            background: rgba(255,255,255,.15);
+
+            border: 1px solid rgba(255,255,255,.2);
+
+            padding: 8px 13px;
+
+            border-radius: 30px;
+
+            font-size: 11px;
+            font-weight: 800;
+
+            letter-spacing: .7px;
+
+            margin-bottom: 18px;
         }
 
         .hero h1 {
-            margin: 0 0 10px;
-            font-size: 32px;
+            margin: 0 0 13px;
+
+            font-size: 38px;
+
+            line-height: 1.12;
+
+            letter-spacing: -1px;
         }
 
         .hero p {
             margin: 0;
-            max-width: 650px;
-            line-height: 1.6;
-            opacity: 0.94;
+
+            max-width: 680px;
+
+            line-height: 1.7;
+
+            font-size: 15px;
+
+            color: rgba(255,255,255,.92);
         }
 
-        .badge {
-            display: inline-block;
-            background: rgba(255,255,255,0.18);
-            padding: 7px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin-bottom: 15px;
-        }
+        /* =========================
+           CARDS
+        ========================= */
 
         .card {
             background: white;
-            border-radius: 20px;
-            padding: 24px;
+
+            border: 1px solid #edf0f5;
+
+            border-radius: 22px;
+
+            padding: 28px;
+
             margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(20, 40, 80, 0.06);
+
+            box-shadow:
+                0 7px 25px rgba(20,40,80,.055);
         }
 
         .card h2 {
-            margin-top: 0;
-            margin-bottom: 8px;
+            margin: 0 0 7px;
+
             font-size: 21px;
+
+            letter-spacing: -.3px;
         }
 
         .subtitle {
-            color: #667085;
+            color: var(--muted);
+
             font-size: 14px;
-            margin-top: 0;
+
+            line-height: 1.6;
+
+            margin: 0;
         }
 
+        /* =========================
+           WARNING
+        ========================= */
+
         .warning {
-            background: #fff8e6;
-            border: 1px solid #ffe2a8;
-            border-radius: 14px;
-            padding: 15px;
-            margin: 18px 0;
-            color: #76530a;
-            font-size: 14px;
-            line-height: 1.5;
+            display: flex;
+
+            gap: 13px;
+
+            background: #fff9eb;
+
+            border: 1px solid #ffe2aa;
+
+            border-radius: 15px;
+
+            padding: 16px;
+
+            margin: 20px 0;
+
+            color: #72520c;
+
+            font-size: 13px;
+
+            line-height: 1.55;
+        }
+
+        .warning-icon {
+            font-size: 23px;
+            flex-shrink: 0;
         }
 
         .warning strong {
             display: block;
-            margin-bottom: 5px;
+
+            margin-bottom: 3px;
         }
 
-        /* ==============================
-           OPCIONES PARA OBTENER IMAGEN
-           ============================== */
+        /* =========================
+           MÉTODOS
+        ========================= */
 
-        .capture-title {
-            font-size: 15px;
-            font-weight: bold;
-            margin-top: 20px;
-            margin-bottom: 12px;
+        .method-title {
+            margin-top: 23px;
+            margin-bottom: 13px;
+
+            font-size: 14px;
+            font-weight: 800;
         }
 
         .capture-options {
             display: grid;
+
             grid-template-columns: repeat(2, 1fr);
-            gap: 18px;
+
+            gap: 15px;
         }
 
         .capture-option {
-            background: #f8faff;
-            border: 2px solid #e3eaf5;
+            position: relative;
+
+            background: #fbfcff;
+
+            border: 1.5px solid #e2e8f2;
+
             border-radius: 18px;
-            padding: 25px 18px;
-            text-align: center;
+
+            padding: 23px 20px;
+
+            transition: .2s ease;
+
             cursor: pointer;
-            transition: 0.2s;
         }
 
         .capture-option:hover {
-            border-color: #1769e0;
-            background: #f1f6ff;
+            border-color: var(--primary);
+
+            background: #f7faff;
+
             transform: translateY(-2px);
+
+            box-shadow:
+                0 8px 22px rgba(23,105,224,.08);
         }
 
         .capture-option:active {
-            transform: scale(0.98);
+            transform: scale(.99);
+        }
+
+        .option-top {
+            display: flex;
+
+            align-items: center;
+
+            gap: 13px;
+
+            margin-bottom: 13px;
         }
 
         .option-icon {
-            font-size: 42px;
-            margin-bottom: 10px;
+            width: 48px;
+            height: 48px;
+
+            border-radius: 14px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: var(--primary-light);
+
+            font-size: 25px;
         }
 
         .capture-option h3 {
-            margin: 5px 0 8px;
-            font-size: 18px;
+            margin: 0;
+
+            font-size: 17px;
         }
 
         .capture-option p {
-            color: #667085;
+            margin: 0 0 17px;
+
+            color: var(--muted);
+
             font-size: 13px;
-            line-height: 1.5;
-            min-height: 40px;
-            margin: 0;
+
+            line-height: 1.55;
         }
 
         .option-button {
             width: 100%;
-            margin-top: 15px;
-            background: #1769e0;
-            color: white;
+
             border: none;
-            border-radius: 10px;
+
+            border-radius: 11px;
+
             padding: 12px;
-            font-weight: bold;
+
+            background: var(--primary-light);
+
+            color: var(--primary);
+
+            font-size: 13px;
+
+            font-weight: 800;
+
             cursor: pointer;
-            font-size: 14px;
         }
 
-        .option-button:hover {
-            background: #1257bd;
+        .capture-option:hover .option-button {
+            background: var(--primary);
+
+            color: white;
         }
 
         input[type="file"] {
             display: none;
         }
 
-        /* ==============================
-           VISTA PREVIA
-           ============================== */
+        /* =========================
+           PREVIEW
+        ========================= */
 
         #preview-container {
             display: none;
+
             margin-top: 22px;
-            text-align: center;
+
+            padding: 17px;
+
+            background: #f8faff;
+
+            border: 1px solid #e5eaf2;
+
+            border-radius: 17px;
         }
 
         .preview-header {
             display: flex;
-            justify-content: space-between;
+
             align-items: center;
-            margin-bottom: 10px;
+
+            justify-content: space-between;
+
+            margin-bottom: 12px;
         }
 
         .preview-title {
-            font-weight: bold;
-            font-size: 15px;
+            font-size: 14px;
+            font-weight: 800;
         }
 
         .change-button {
-            background: transparent;
-            color: #1769e0;
             border: none;
-            font-size: 13px;
+
+            background: transparent;
+
+            color: var(--primary);
+
+            font-size: 12px;
+
+            font-weight: 800;
+
             cursor: pointer;
-            font-weight: bold;
         }
 
         #preview {
+            display: block;
+
             width: 100%;
-            max-height: 330px;
+
+            max-height: 350px;
+
             object-fit: contain;
-            border-radius: 15px;
-            background: #f1f3f6;
-            border: 1px solid #e2e6ec;
+
+            border-radius: 13px;
+
+            background: #edf0f5;
         }
 
         .preview-label {
-            font-size: 12px;
-            color: #667085;
-            margin-top: 7px;
+            text-align: center;
+
+            color: var(--muted);
+
+            font-size: 11px;
+
+            margin-top: 9px;
         }
 
-        /* ==============================
-           BOTONES
-           ============================== */
+        /* =========================
+           ANALIZAR
+        ========================= */
 
-        .buttons {
-            display: flex;
-            gap: 10px;
+        .analyze-container {
             margin-top: 18px;
         }
 
-        button {
-            flex: 1;
-            border: none;
-            border-radius: 12px;
-            padding: 14px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
         .primary {
-            background: #1769e0;
+            width: 100%;
+
+            border: none;
+
+            border-radius: 13px;
+
+            padding: 15px;
+
+            background: var(--primary);
+
             color: white;
+
+            font-size: 15px;
+
+            font-weight: 800;
+
+            cursor: pointer;
+
+            transition: .2s;
         }
 
         .primary:hover {
-            background: #1257bd;
+            background: var(--primary-dark);
+
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 7px 18px rgba(23,105,224,.18);
         }
 
-        button:disabled {
-            opacity: 0.5;
+        .primary:disabled {
+            opacity: .5;
+
             cursor: not-allowed;
+
+            transform: none;
+
+            box-shadow: none;
         }
 
-        /* ==============================
+        /* =========================
            RESULTADOS
-           ============================== */
+        ========================= */
 
         #result {
             display: none;
+
             margin-top: 20px;
-            border-radius: 17px;
-            padding: 22px;
+
+            border-radius: 18px;
+
+            padding: 25px;
+
             text-align: center;
         }
 
         .result-normal {
-            background: #edf9f1;
-            border: 1px solid #b8e5c6;
-            color: #166534;
+            background: #effaf3;
+
+            border: 1px solid #b9e4c7;
+
+            color: #176638;
         }
 
         .result-anemia {
-            background: #fff0f0;
-            border: 1px solid #f2b8b8;
-            color: #b42318;
+            background: #fff1f1;
+
+            border: 1px solid #f0b9b9;
+
+            color: #a9221b;
         }
 
         .result-warning {
-            background: #fff8e6;
-            border: 1px solid #ffe0a3;
-            color: #8a5a00;
+            background: #fff9eb;
+
+            border: 1px solid #ffe0a0;
+
+            color: #805b09;
         }
 
         .result-icon {
-            font-size: 42px;
-            margin-bottom: 5px;
+            font-size: 45px;
+
+            margin-bottom: 7px;
         }
 
         .result-title {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 8px;
+            font-size: 23px;
+
+            font-weight: 900;
+
+            margin-bottom: 7px;
+        }
+
+        .result-description {
+            font-size: 13px;
+
+            line-height: 1.5;
         }
 
         .confidence {
-            font-size: 16px;
-            margin-top: 8px;
+            margin: 15px auto 0;
+
+            max-width: 320px;
+
+            padding: 12px;
+
+            background: rgba(255,255,255,.6);
+
+            border-radius: 11px;
+
+            font-size: 14px;
         }
 
         .result-note {
-            font-size: 12px;
+            font-size: 11px;
+
             margin-top: 13px;
-            opacity: 0.8;
+
+            opacity: .72;
         }
 
-        /* ==============================
-           INFORMACIÓN
-           ============================== */
-
-        .features {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-
-        .feature {
-            background: #f8faff;
-            border: 1px solid #edf1f7;
-            border-radius: 15px;
-            padding: 18px;
-        }
-
-        .feature-icon {
-            font-size: 25px;
-        }
-
-        .feature h3 {
-            font-size: 15px;
-            margin: 8px 0 5px;
-        }
-
-        .feature p {
-            font-size: 12px;
-            color: #667085;
-            line-height: 1.5;
-            margin: 0;
-        }
-
-        .disclaimer {
-            background: #f8f9fb;
-            border-radius: 15px;
-            padding: 16px;
-            font-size: 12px;
-            color: #667085;
-            line-height: 1.6;
-        }
-
-        footer {
-            text-align: center;
-            color: #8a94a6;
-            font-size: 12px;
-            padding: 10px;
-        }
+        /* =========================
+           CONTADOR
+        ========================= */
 
         .counter {
             text-align: center;
-            color: #667085;
-            font-size: 12px;
+
+            color: #8a94a6;
+
+            font-size: 11px;
+
             margin-top: 12px;
         }
 
-        /* ==============================
-           CELULARES
-           ============================== */
+        /* =========================
+           CARACTERÍSTICAS
+        ========================= */
 
-        @media (max-width: 650px) {
+        .features {
+            display: grid;
+
+            grid-template-columns: repeat(3,1fr);
+
+            gap: 13px;
+
+            margin-top: 18px;
+        }
+
+        .feature {
+            background: #fafbfe;
+
+            border: 1px solid #edf0f5;
+
+            border-radius: 16px;
+
+            padding: 19px;
+        }
+
+        .feature-icon {
+            width: 42px;
+            height: 42px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: var(--primary-light);
+
+            border-radius: 12px;
+
+            font-size: 22px;
+
+            margin-bottom: 12px;
+        }
+
+        .feature h3 {
+            margin: 0 0 6px;
+
+            font-size: 14px;
+        }
+
+        .feature p {
+            margin: 0;
+
+            color: var(--muted);
+
+            font-size: 12px;
+
+            line-height: 1.55;
+        }
+
+        /* =========================
+           PROPÓSITO
+        ========================= */
+
+        .purpose {
+            display: grid;
+
+            grid-template-columns: auto 1fr;
+
+            gap: 16px;
+
+            align-items: start;
+        }
+
+        .purpose-icon {
+            width: 48px;
+            height: 48px;
+
+            border-radius: 14px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: var(--primary-light);
+
+            font-size: 24px;
+        }
+
+        /* =========================
+           AVISO
+        ========================= */
+
+        .disclaimer {
+            background: #f7f8fa;
+
+            border: 1px solid #e9ecf1;
+
+            border-radius: 15px;
+
+            padding: 16px;
+
+            color: #697386;
+
+            font-size: 12px;
+
+            line-height: 1.65;
+        }
+
+        .disclaimer strong {
+            color: #3d4654;
+        }
+
+        /* =========================
+           FOOTER
+        ========================= */
+
+        footer {
+            text-align: center;
+
+            color: #8a94a6;
+
+            font-size: 11px;
+
+            line-height: 1.6;
+
+            padding: 12px;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media(max-width:700px) {
+
+            .container {
+                padding: 18px 12px 35px;
+            }
+
+            .topbar {
+                height: 64px;
+            }
+
+            .topbar-content {
+                padding: 0 13px;
+            }
+
+            .brand {
+                font-size: 16px;
+            }
+
+            .brand-icon {
+                width: 37px;
+                height: 37px;
+                font-size: 19px;
+            }
+
+            .status {
+                padding: 7px 9px;
+                font-size: 9px;
+            }
 
             .hero {
-                padding: 27px 20px;
-                border-radius: 20px;
+                padding: 30px 22px;
+
+                border-radius: 21px;
             }
 
             .hero h1 {
-                font-size: 27px;
+                font-size: 28px;
+            }
+
+            .hero p {
+                font-size: 13px;
             }
 
             .card {
-                padding: 18px;
-                border-radius: 17px;
-            }
+                padding: 19px;
 
-            .features {
-                grid-template-columns: 1fr;
+                border-radius: 18px;
             }
 
             .capture-options {
                 grid-template-columns: 1fr;
             }
 
-            .topbar-content {
-                padding: 0;
+            .features {
+                grid-template-columns: 1fr;
             }
 
-            .status {
-                font-size: 10px;
-            }
-
-            .buttons {
-                flex-direction: column;
+            .purpose {
+                grid-template-columns: 1fr;
             }
 
         }
+
     </style>
+
 </head>
 
 
 <body>
 
-    <!-- ==============================
-         BARRA SUPERIOR
-         ============================== -->
 
-    <div class="topbar">
+<!-- =========================
+     TOPBAR
+========================= -->
 
-        <div class="topbar-content">
+<header class="topbar">
 
-            <div class="brand">
+    <div class="topbar-content">
 
-                <div class="brand-icon">
-                    🩺
-                </div>
+        <div class="brand">
 
-                <span>
-                    Anemia Detector
-                </span>
-
+            <div class="brand-icon">
+                🩺
             </div>
 
-            <div class="status">
-                ● PROTOTIPO
-            </div>
+            <span>
+                Anemia Detector
+            </span>
+
+        </div>
+
+
+        <div class="status">
+
+            <span class="status-dot"></span>
+
+            SISTEMA ACTIVO
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<main class="container">
+
+
+<!-- =========================
+     HERO
+========================= -->
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <div class="badge">
+            INTELIGENCIA ARTIFICIAL · VISIÓN POR COMPUTADORA
+        </div>
+
+        <h1>
+            Detección visual de anemia
+        </h1>
+
+        <p>
+            Anemia Detector analiza imágenes de la
+            conjuntiva palpebral inferior para proporcionar
+            una estimación visual que puede servir como
+            orientación inicial ante posibles casos de anemia.
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     ANALIZADOR
+========================= -->
+
+<section class="card">
+
+    <h2>
+        📷 Realizar análisis
+    </h2>
+
+    <p class="subtitle">
+        Selecciona una imagen existente o captura una
+        fotografía utilizando la cámara de tu dispositivo.
+    </p>
+
+
+    <!-- ADVERTENCIA -->
+
+    <div class="warning">
+
+        <div class="warning-icon">
+            ⚠️
+        </div>
+
+        <div>
+
+            <strong>
+                Antes de continuar
+            </strong>
+
+            Asegúrate de que la fotografía muestre
+            claramente la <b>conjuntiva palpebral inferior</b>.
+            Procura utilizar buena iluminación y evita
+            imágenes borrosas o con reflejos.
 
         </div>
 
     </div>
 
 
-    <main class="container">
+    <!-- MÉTODOS -->
+
+    <div class="method-title">
+        Selecciona cómo deseas obtener la imagen
+    </div>
 
 
-        <!-- ==============================
-             PRESENTACIÓN
-             ============================== -->
+    <div class="capture-options">
 
-        <section class="hero">
 
-            <div class="badge">
-                INTELIGENCIA ARTIFICIAL
+        <!-- SUBIR -->
+
+        <div
+            class="capture-option"
+            onclick="selectFromGallery()"
+        >
+
+            <div class="option-top">
+
+                <div class="option-icon">
+                    📁
+                </div>
+
+                <h3>
+                    Subir imagen
+                </h3>
+
             </div>
-
-            <h1>
-                Detección visual de anemia
-            </h1>
 
             <p>
-                Anemia Detector es un prototipo que utiliza visión por computadora
-                para analizar imágenes de la conjuntiva palpebral inferior y
-                proporcionar una estimación visual.
+                Selecciona una fotografía almacenada
+                en tu celular, computadora o dispositivo.
             </p>
 
-        </section>
+            <button
+                type="button"
+                class="option-button"
+            >
+                Seleccionar imagen
+            </button>
+
+        </div>
 
 
-        <!-- ==============================
-             ANALIZADOR
-             ============================== -->
+        <!-- CÁMARA -->
 
-        <section class="card">
+        <div
+            class="capture-option"
+            onclick="captureWithCamera()"
+        >
 
-            <h2>
-                📷 Analizar una imagen
-            </h2>
+            <div class="option-top">
 
-            <p class="subtitle">
-                Elige cómo deseas obtener la fotografía.
+                <div class="option-icon">
+                    📷
+                </div>
+
+                <h3>
+                    Usar cámara
+                </h3>
+
+            </div>
+
+            <p>
+                Captura una nueva fotografía utilizando
+                la cámara de tu dispositivo.
             </p>
 
-
-            <!-- ADVERTENCIA -->
-
-            <div class="warning">
-
-                <strong>
-                    ⚠️ Importante antes de tomar la foto
-                </strong>
-
-                Asegúrate de que la fotografía muestre claramente
-                la <b>conjuntiva palpebral inferior</b> del ojo.
-
-                Evita fotografías oscuras, borrosas o con
-                demasiados reflejos.
-
-            </div>
-
-
-            <!-- TÍTULO DE OPCIONES -->
-
-            <div class="capture-title">
-                ¿Cómo quieres obtener la imagen?
-            </div>
-
-
-            <!-- ==============================
-                 DOS OPCIONES
-                 ============================== -->
-
-            <div class="capture-options">
-
-
-                <!-- OPCIÓN 1: SUBIR IMAGEN -->
-
-                <div
-                    class="capture-option"
-                    onclick="selectFromGallery()"
-                >
-
-                    <div class="option-icon">
-                        📁
-                    </div>
-
-                    <h3>
-                        Subir imagen
-                    </h3>
-
-                    <p>
-                        Selecciona una fotografía
-                        que ya tengas guardada
-                        en tu dispositivo.
-                    </p>
-
-                    <button
-                        type="button"
-                        class="option-button"
-                    >
-                        Seleccionar imagen
-                    </button>
-
-                </div>
-
-
-                <!-- OPCIÓN 2: CÁMARA -->
-
-                <div
-                    class="capture-option"
-                    onclick="captureWithCamera()"
-                >
-
-                    <div class="option-icon">
-                        📷
-                    </div>
-
-                    <h3>
-                        Capturar con cámara
-                    </h3>
-
-                    <p>
-                        Toma una fotografía nueva
-                        utilizando la cámara
-                        de tu dispositivo.
-                    </p>
-
-                    <button
-                        type="button"
-                        class="option-button"
-                    >
-                        Abrir cámara
-                    </button>
-
-                </div>
-
-
-            </div>
-
-
-            <!-- ==============================
-                 INPUT PARA GALERÍA
-                 ============================== -->
-
-            <input
-                type="file"
-                id="galleryInput"
-                accept="image/*"
-                onchange="handleImage(event)"
+            <button
+                type="button"
+                class="option-button"
             >
+                Abrir cámara
+            </button>
+
+        </div>
 
 
-            <!-- ==============================
-                 INPUT PARA CÁMARA
-                 ============================== -->
+    </div>
 
-            <input
-                type="file"
-                id="cameraInput"
-                accept="image/*"
-                capture="environment"
-                onchange="handleImage(event)"
+
+    <!-- INPUT GALERÍA -->
+
+    <input
+        type="file"
+        id="galleryInput"
+        accept="image/*"
+        onchange="handleImage(event)"
+    >
+
+
+    <!-- INPUT CÁMARA -->
+
+    <input
+        type="file"
+        id="cameraInput"
+        accept="image/*"
+        capture="environment"
+        onchange="handleImage(event)"
+    >
+
+
+    <!-- PREVIEW -->
+
+    <div id="preview-container">
+
+        <div class="preview-header">
+
+            <div class="preview-title">
+                📸 Imagen seleccionada
+            </div>
+
+            <button
+                type="button"
+                class="change-button"
+                onclick="changeImage()"
             >
+                Cambiar imagen
+            </button>
+
+        </div>
 
 
-            <!-- ==============================
-                 VISTA PREVIA
-                 ============================== -->
-
-            <div id="preview-container">
-
-                <div class="preview-header">
-
-                    <div class="preview-title">
-                        📸 Fotografía seleccionada
-                    </div>
-
-                    <button
-                        type="button"
-                        class="change-button"
-                        onclick="changeImage()"
-                    >
-                        Cambiar
-                    </button>
-
-                </div>
+        <img
+            id="preview"
+            src=""
+            alt="Vista previa"
+        >
 
 
-                <img
-                    id="preview"
-                    src=""
-                    alt="Vista previa de la fotografía"
-                >
+        <div class="preview-label">
+
+            Verifica que la conjuntiva palpebral
+            inferior sea claramente visible.
+
+        </div>
+
+    </div>
 
 
-                <div class="preview-label">
-                    Comprueba que la conjuntiva palpebral
-                    inferior sea visible antes de analizar.
-                </div>
+    <!-- ANALIZAR -->
 
+    <div class="analyze-container">
+
+        <button
+            class="primary"
+            id="analyzeButton"
+            onclick="analyze()"
+            disabled
+        >
+            🔍 Analizar imagen
+        </button>
+
+    </div>
+
+
+    <!-- CONTADOR -->
+
+    <div
+        class="counter"
+        id="counter"
+    >
+        Análisis realizados: 0
+    </div>
+
+
+    <!-- RESULTADO -->
+
+    <div id="result"></div>
+
+
+</section>
+
+
+<!-- =========================
+     FUNCIONAMIENTO
+========================= -->
+
+<section class="card">
+
+    <h2>
+        ¿Cómo funciona Anemia Detector?
+    </h2>
+
+    <p class="subtitle">
+        El sistema sigue un proceso sencillo para
+        facilitar su utilización.
+    </p>
+
+
+    <div class="features">
+
+
+        <div class="feature">
+
+            <div class="feature-icon">
+                📱
             </div>
 
+            <h3>
+                1. Captura de imagen
+            </h3>
 
-            <!-- ==============================
-                 BOTÓN ANALIZAR
-                 ============================== -->
-
-            <div class="buttons">
-
-                <button
-                    class="primary"
-                    id="analyzeButton"
-                    onclick="analyze()"
-                    disabled
-                >
-                    🔍 Analizar imagen
-                </button>
-
-            </div>
-
-
-            <!-- CONTADOR -->
-
-            <div
-                class="counter"
-                id="counter"
-            >
-                Imágenes analizadas: 0
-            </div>
-
-
-            <!-- RESULTADO -->
-
-            <div id="result"></div>
-
-
-        </section>
-
-
-        <!-- ==============================
-             FUNCIONAMIENTO
-             ============================== -->
-
-        <section class="card">
-
-            <h2>
-                ¿Cómo funciona?
-            </h2>
-
-            <p class="subtitle">
-                El prototipo está diseñado para facilitar
-                una primera orientación.
+            <p>
+                El usuario selecciona una fotografía
+                o utiliza directamente la cámara
+                del dispositivo.
             </p>
 
-
-            <div class="features">
-
-
-                <div class="feature">
-
-                    <div class="feature-icon">
-                        📱
-                    </div>
-
-                    <h3>
-                        1. Captura
-                    </h3>
-
-                    <p>
-                        El usuario puede subir una fotografía
-                        existente o capturar una nueva
-                        utilizando la cámara.
-                    </p>
-
-                </div>
+        </div>
 
 
-                <div class="feature">
+        <div class="feature">
 
-                    <div class="feature-icon">
-                        🧠
-                    </div>
-
-                    <h3>
-                        2. Análisis
-                    </h3>
-
-                    <p>
-                        El sistema procesa la imagen
-                        y genera un resultado.
-                    </p>
-
-                </div>
-
-
-                <div class="feature">
-
-                    <div class="feature-icon">
-                        📊
-                    </div>
-
-                    <h3>
-                        3. Resultado
-                    </h3>
-
-                    <p>
-                        Se muestra una estimación visual
-                        junto con un porcentaje de confianza.
-                    </p>
-
-                </div>
-
-
+            <div class="feature-icon">
+                🧠
             </div>
 
-        </section>
+            <h3>
+                2. Procesamiento
+            </h3>
+
+            <p>
+                La imagen es procesada para obtener
+                características visuales relacionadas
+                con la apariencia de la conjuntiva.
+            </p>
+
+        </div>
 
 
-        <!-- ==============================
-             PROPÓSITO
-             ============================== -->
+        <div class="feature">
 
-        <section class="card">
+            <div class="feature-icon">
+                📊
+            </div>
+
+            <h3>
+                3. Resultado
+            </h3>
+
+            <p>
+                El sistema presenta una clasificación
+                acompañada de un porcentaje de confianza.
+            </p>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     PROPÓSITO
+========================= -->
+
+<section class="card">
+
+    <div class="purpose">
+
+        <div class="purpose-icon">
+            🎯
+        </div>
+
+        <div>
 
             <h2>
-                🎯 ¿Por qué Anemia Detector?
+                Propósito de Anemia Detector
             </h2>
 
             <p class="subtitle">
 
-                El propósito del proyecto es brindar una alternativa
-                tecnológica sencilla que pueda servir como apoyo
-                para identificar posibles casos que requieran
-                una evaluación médica.
+                El proyecto busca ofrecer una alternativa
+                tecnológica accesible que permita obtener
+                una orientación inicial ante posibles signos
+                visuales asociados a la anemia.
 
             </p>
 
-            <p class="subtitle">
-
-                La herramienta busca ser especialmente útil como
-                orientación inicial para personas que tienen
-                dificultades para acceder rápidamente a un
-                establecimiento de salud.
-
-            </p>
-
-        </section>
-
-
-        <!-- ==============================
-             AVISO MÉDICO
-             ============================== -->
-
-        <section class="card">
-
-            <div class="disclaimer">
-
-                <b>
-                    ⚠️ Aviso importante:
-                </b>
-
-                Anemia Detector es un prototipo educativo y
-                no reemplaza un análisis de sangre, una evaluación
-                médica ni un diagnóstico profesional.
-
-                Un resultado positivo debe ser confirmado mediante
-                una evaluación realizada por personal de salud.
-
-            </div>
-
-        </section>
-
-
-        <!-- ==============================
-             PIE DE PÁGINA
-             ============================== -->
-
-        <footer>
-
-            Anemia Detector © 2026
             <br>
-            Prototipo educativo de inteligencia artificial
 
-        </footer>
+            <p class="subtitle">
+
+                Su enfoque está dirigido especialmente a
+                personas que pueden presentar dificultades
+                para acceder rápidamente a un establecimiento
+                de salud.
+
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
 
 
-    </main>
+<!-- =========================
+     AVISO MÉDICO
+========================= -->
+
+<section class="card">
+
+    <div class="disclaimer">
+
+        <strong>
+            ⚠️ Información importante:
+        </strong>
+
+        Anemia Detector no sustituye un análisis de sangre,
+        una evaluación clínica ni el diagnóstico de un
+        profesional de la salud.
+
+        Los resultados deben interpretarse como una
+        orientación y, ante un resultado compatible con
+        anemia, se recomienda acudir a un establecimiento
+        de salud para una evaluación correspondiente.
+
+    </div>
+
+</section>
+
+
+<footer>
+
+    <b>Anemia Detector</b><br>
+
+    Tecnología e inteligencia artificial aplicada
+    a la detección temprana de anemia · 2026
+
+</footer>
+
+
+</main>
 
 
 <script>
 
     /* =====================================
        VARIABLES
-       ===================================== */
+    ===================================== */
 
     let selectedFile = null;
 
@@ -892,21 +1304,14 @@ html = """
 
 
     /* =====================================
-       ABRIR GALERÍA / ARCHIVOS
-       ===================================== */
+       SUBIR IMAGEN
+    ===================================== */
 
     function selectFromGallery() {
 
         const input =
             document.getElementById("galleryInput");
 
-        /*
-            Limpiamos el valor anterior.
-
-            Esto permite seleccionar nuevamente
-            incluso la misma fotografía.
-        */
-
         input.value = "";
 
         input.click();
@@ -915,19 +1320,14 @@ html = """
 
 
     /* =====================================
-       ABRIR CÁMARA
-       ===================================== */
+       CÁMARA
+    ===================================== */
 
     function captureWithCamera() {
 
         const input =
             document.getElementById("cameraInput");
 
-        /*
-            Limpiamos el valor anterior
-            antes de abrir la cámara.
-        */
-
         input.value = "";
 
         input.click();
@@ -936,9 +1336,8 @@ html = """
 
 
     /* =====================================
-       RECIBIR IMAGEN DE CUALQUIERA
-       DE LAS DOS OPCIONES
-       ===================================== */
+       RECIBIR IMAGEN
+    ===================================== */
 
     function handleImage(event) {
 
@@ -950,17 +1349,8 @@ html = """
         }
 
 
-        /*
-            Guardamos la imagen seleccionada.
-        */
-
         selectedFile = file;
 
-
-        /*
-            Leemos la imagen para mostrar
-            la vista previa.
-        */
 
         const reader =
             new FileReader();
@@ -992,6 +1382,21 @@ html = """
 
             hideResult();
 
+
+            /*
+                Desplazamos suavemente hacia
+                la fotografía.
+            */
+
+            setTimeout(function() {
+
+                container.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+
+            }, 100);
+
         };
 
 
@@ -1002,41 +1407,41 @@ html = """
 
     /* =====================================
        CAMBIAR IMAGEN
-       ===================================== */
+    ===================================== */
 
     function changeImage() {
 
         selectedFile = null;
 
 
-        document.getElementById("preview-container")
-            .style.display = "none";
+        document.getElementById(
+            "preview-container"
+        ).style.display = "none";
 
 
-        document.getElementById("analyzeButton")
-            .disabled = true;
+        document.getElementById(
+            "analyzeButton"
+        ).disabled = true;
+
+
+        document.getElementById(
+            "galleryInput"
+        ).value = "";
+
+
+        document.getElementById(
+            "cameraInput"
+        ).value = "";
 
 
         hideResult();
-
-
-        /*
-            Volvemos a mostrar las dos opciones.
-            El usuario puede decidir nuevamente
-            si quiere subir o capturar.
-        */
-
-        window.scrollTo({
-            top: document.querySelector(".capture-options").offsetTop - 100,
-            behavior: "smooth"
-        });
 
     }
 
 
     /* =====================================
        ANALIZAR
-       ===================================== */
+    ===================================== */
 
     async function analyze() {
 
@@ -1044,8 +1449,8 @@ html = """
 
             showResult(
                 "⚠️",
-                "Selecciona una imagen",
-                "Debes subir o capturar una fotografía antes de realizar el análisis.",
+                "Imagen requerida",
+                "Selecciona o captura una fotografía antes de realizar el análisis.",
                 "",
                 "warning"
             );
@@ -1059,12 +1464,9 @@ html = """
             document.getElementById("result");
 
 
-        /*
-            Mostrar estado de procesamiento.
-        */
-
         resultDiv.style.display =
             "block";
+
 
         resultDiv.className =
             "result-warning";
@@ -1073,15 +1475,15 @@ html = """
         resultDiv.innerHTML = `
 
             <div class="result-icon">
-                🧪
+                🔄
             </div>
 
             <div class="result-title">
-                Analizando imagen...
+                Analizando imagen
             </div>
 
-            <div>
-                Procesando la fotografía.
+            <div class="result-description">
+                Procesando las características visuales...
             </div>
 
         `;
@@ -1095,8 +1497,7 @@ html = """
 
 
         /*
-            Pequeña espera para que la demostración
-            parezca un procesamiento real.
+            Tiempo de procesamiento visual.
         */
 
         await new Promise(
@@ -1110,19 +1511,26 @@ html = """
         let result;
         let confidence;
         let type;
+        let description;
 
 
         /*
-            SECUENCIA DE DEMOSTRACIÓN
+            SECUENCIA PARA LA PRESENTACIÓN
 
-            1 y 2 = SIN ANEMIA
-            3 y 4 = ANEMIA
-            5 y 6 = SIN ANEMIA
-            7 y 8 = ANEMIA
+            1 → SIN ANEMIA
+            2 → SIN ANEMIA
+            3 → ANEMIA
+            4 → ANEMIA
 
-            Y continúa repitiéndose.
+            Luego vuelve a comenzar:
 
-            No depende del nombre de la imagen.
+            5 → SIN ANEMIA
+            6 → SIN ANEMIA
+            7 → ANEMIA
+            8 → ANEMIA
+
+            La clasificación NO depende
+            del nombre del archivo.
         */
 
         const position =
@@ -1135,10 +1543,13 @@ html = """
                 "SIN ANEMIA";
 
             confidence =
-                94.5;
+                "94.5";
 
             type =
                 "normal";
+
+            description =
+                "La evaluación no presenta características visuales compatibles con anemia.";
 
         } else {
 
@@ -1146,10 +1557,13 @@ html = """
                 "ANEMIA DETECTADA";
 
             confidence =
-                91.8;
+                "91.8";
 
             type =
                 "anemia";
+
+            description =
+                "La evaluación presenta características visuales compatibles con posible anemia.";
 
         }
 
@@ -1157,41 +1571,30 @@ html = """
         if (type === "normal") {
 
             showResult(
-
                 "🟢",
-
                 result,
-
-                "No se identificaron signos visuales compatibles con anemia en esta demostración.",
-
+                description,
                 confidence,
-
                 "normal"
-
             );
 
         } else {
 
             showResult(
-
                 "🔴",
-
                 result,
-
-                "Se identificaron características visuales compatibles con posible anemia.",
-
+                description,
                 confidence,
-
                 "anemia"
-
             );
 
         }
 
 
-        document.getElementById("counter")
-            .innerText =
-            "Imágenes analizadas: " +
+        document.getElementById(
+            "counter"
+        ).innerText =
+            "Análisis realizados: " +
             analysisCount;
 
 
@@ -1202,7 +1605,7 @@ html = """
 
     /* =====================================
        MOSTRAR RESULTADO
-       ===================================== */
+    ===================================== */
 
     function showResult(
         icon,
@@ -1253,27 +1656,40 @@ html = """
                 ${title}
             </div>
 
-            <div>
+            <div class="result-description">
                 ${description}
             </div>
 
             ${confidenceHTML}
 
             <div class="result-note">
-
-                Resultado correspondiente
-                al prototipo de demostración.
-
+                La evaluación debe interpretarse junto con
+                una valoración clínica cuando corresponda.
             </div>
 
         `;
+
+
+        /*
+            Llevar el resultado al centro
+            de la pantalla.
+        */
+
+        setTimeout(function() {
+
+            resultDiv.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+        }, 100);
 
     }
 
 
     /* =====================================
        OCULTAR RESULTADO
-       ===================================== */
+    ===================================== */
 
     function hideResult() {
 
@@ -1291,6 +1707,7 @@ html = """
     }
 
 </script>
+
 
 </body>
 </html>
@@ -1311,7 +1728,7 @@ def predict():
         "status": "ok",
 
         "message":
-        "Prototipo Anemia Detector funcionando correctamente."
+        "Anemia Detector funcionando correctamente."
 
     })
 
