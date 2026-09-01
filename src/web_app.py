@@ -2,11 +2,29 @@
 from flask import Flask, request, jsonify, render_template_string
 import numpy as np
 import cv2
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
 import os
 import requests
 import base64
+
+# ============================================================
+# OPTIMIZACION DE MEMORIA PARA TENSORFLOW (CRITICO EN RENDER)
+# ============================================================
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Silenciar logs de TensorFlow
+import tensorflow as tf
+tf.get_logger().setLevel('ERROR')
+
+# Desactivar GPU y limitar crecimiento de memoria
+tf.config.set_visible_devices([], 'GPU')
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError:
+        pass
+
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image
 
 app = Flask(__name__)
 
@@ -25,7 +43,7 @@ except Exception as e:
 def consultar_gemini(ruta_imagen):
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        return None  # Si no hay clave, retorna None y el sistema sigue solo con tu modelo local
+        return None
     
     try:
         with open(ruta_imagen, "rb") as f:
@@ -51,7 +69,6 @@ def consultar_gemini(ruta_imagen):
             ]
         }
         
-        # Timeout de 8 segundos: si tarda más, falla elegantemente y usa solo el modelo local
         response = requests.post(url, json=payload, timeout=8)
         response.raise_for_status()
         data = response.json()
