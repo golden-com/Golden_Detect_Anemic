@@ -99,7 +99,6 @@ def home():
                 pointer-events: none; z-index: 0;
             }
 
-            /* Navbar */
             .navbar {
                 position: relative; z-index: 5;
                 display: flex; align-items: center; justify-content: space-between;
@@ -116,7 +115,6 @@ def home():
             }
             .nav-cta:hover { background: var(--accent-strong); transform: translateY(-1px); }
 
-            /* Hero */
             .hero {
                 position: relative; z-index: 1;
                 display: flex; flex-direction: column; align-items: center; text-align: center;
@@ -149,7 +147,6 @@ def home():
             .credit-eureka { display: inline-block; font-family: 'Fraunces', serif; font-size: 0.85rem; color: var(--accent); border: 1px solid var(--border); padding: 6px 16px; border-radius: 20px; margin-bottom: 6px; }
             .credit-inst { font-size: 0.75rem; color: var(--text-faint); }
 
-            /* ===== Overlay / modal system ===== */
             .overlay {
                 position: fixed; inset: 0; z-index: 50;
                 background: rgba(10, 8, 6, 0.72);
@@ -177,15 +174,17 @@ def home():
                 z-index: 2;
             }
             .modal-close:hover { color: var(--text); background: rgba(245,240,232,0.12); }
+            .modal-back {
+                background: none; border: none; color: var(--text-soft); font-size: 0.82rem;
+                cursor: pointer; padding: 0; margin-bottom: 18px; font-family: 'Work Sans', sans-serif;
+            }
+            .modal-back:hover { color: var(--text); }
 
             /* Modal: advertencia */
             #modalWarning .modal { max-width: 480px; padding: 44px 40px; text-align: center; }
             .warning-icon { margin-bottom: 22px; }
             .warning-icon svg { width: 52px; height: 52px; }
-            #modalWarning h2 {
-                font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.4rem;
-                margin: 0 0 22px; line-height: 1.3;
-            }
+            #modalWarning h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.4rem; margin: 0 0 22px; line-height: 1.3; }
             .duration-badge {
                 display: inline-flex; align-items: center; gap: 7px;
                 padding: 9px 18px; border: 1px solid rgba(63,175,166,0.35); border-radius: 30px;
@@ -207,10 +206,41 @@ def home():
             .step-card p { font-size: 0.78rem; color: var(--text-faint); margin: 0; line-height: 1.6; }
             #modalHow .cta-row { text-align: center; }
 
-            /* Modal: detector */
-            #modalDetector .modal { max-width: 900px; width: 92vw; padding: 40px 36px 36px; }
+            /* Modal: detector (seleccion) */
+            #modalDetector .modal { max-width: 640px; padding: 44px 40px; }
             #modalDetector h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.4rem; text-align: center; margin: 0 0 6px; }
-            #modalDetector .modal-sub { text-align: center; color: var(--text-faint); font-size: 0.85rem; margin: 0 0 26px; }
+            #modalDetector .modal-sub { text-align: center; color: var(--text-faint); font-size: 0.85rem; margin: 0 0 30px; }
+
+            .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+            @media (max-width: 520px) { .option-grid { grid-template-columns: 1fr; } }
+            .option-card {
+                background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px;
+                padding: 26px 20px; text-align: left; cursor: pointer;
+                font-family: 'Work Sans', sans-serif; color: var(--text);
+                transition: border-color .2s ease, background .2s ease;
+            }
+            .option-card:hover { border-color: var(--accent); background: rgba(210,84,63,0.06); }
+            .option-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+            .option-icon svg { width: 20px; height: 20px; color: var(--accent); }
+            .option-card h3 { font-size: 0.95rem; font-weight: 600; margin: 0 0 6px; }
+            .option-card p { font-size: 0.78rem; color: var(--text-faint); margin: 0; line-height: 1.5; }
+
+            .upload-box {
+                border: 1.5px dashed var(--border); border-radius: 12px; padding: 30px 20px;
+                text-align: center; cursor: pointer; transition: border-color .2s ease;
+            }
+            .upload-box:hover { border-color: var(--accent); }
+            .upload-box p { font-size: 0.85rem; color: var(--text-soft); margin: 0 0 4px; }
+            .upload-box span { font-size: 0.75rem; color: var(--text-faint); }
+
+            .mini-disclaimer { font-size: 0.75rem; color: var(--text-faint); border-left: 2px solid var(--border); padding-left: 12px; margin: 18px 0; }
+
+            #previewUpload { max-width: 100%; max-height: 220px; border-radius: 10px; margin: 16px auto 0; display: none; }
+
+            /* Modal: camara */
+            #modalCamera .modal { max-width: 900px; width: 92vw; padding: 40px 36px 36px; }
+            #modalCamera h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.4rem; text-align: center; margin: 0 0 6px; }
+            #modalCamera .modal-sub { text-align: center; color: var(--text-faint); font-size: 0.85rem; margin: 0 0 26px; }
 
             .detector-grid { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 32px; align-items: start; }
             @media (max-width: 760px) { .detector-grid { grid-template-columns: 1fr; } }
@@ -218,7 +248,6 @@ def home():
             .tips { list-style: none; padding: 0; margin: 0 0 22px; display: flex; flex-direction: column; gap: 9px; }
             .tips li { display: flex; gap: 9px; font-size: 0.82rem; color: var(--text-soft); align-items: flex-start; }
             .tips li::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 7px; flex-shrink: 0; }
-            .mini-disclaimer { font-size: 0.75rem; color: var(--text-faint); border-left: 2px solid var(--border); padding-left: 12px; }
 
             .camera-card { background: #0D0B09; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
             .camera-wrap { position: relative; width: 100%; aspect-ratio: 4/3; background: #0a0908; }
@@ -242,15 +271,13 @@ def home():
                 padding: 10px 18px; border: 1px solid transparent; border-radius: 24px; cursor: pointer;
                 transition: background .15s ease, border-color .15s ease;
             }
-            #startBtn { background: var(--accent); color: #17120F; }
-            #startBtn:hover { background: var(--accent-strong); }
-            #captureBtn { background: transparent; color: var(--text); border-color: rgba(245,240,232,0.25); }
-            #captureBtn:hover:not(:disabled) { border-color: var(--text); }
-            #captureBtn:disabled { color: rgba(245,240,232,0.3); cursor: not-allowed; }
-            #retryBtn { background: transparent; color: var(--text-soft); border-color: var(--border); }
-            #retryBtn:hover { border-color: var(--text-soft); }
-
-            #preview { display: none; }
+            .ctrl.solid { background: var(--accent); color: #17120F; }
+            .ctrl.solid:hover { background: var(--accent-strong); }
+            .ctrl.outline { background: transparent; color: var(--text); border-color: rgba(245,240,232,0.25); }
+            .ctrl.outline:hover:not(:disabled) { border-color: var(--text); }
+            .ctrl.outline:disabled { color: rgba(245,240,232,0.3); cursor: not-allowed; }
+            .ctrl.ghost { background: transparent; color: var(--text-soft); border-color: var(--border); }
+            .ctrl.ghost:hover { border-color: var(--text-soft); }
 
             .result { margin-top: 16px; padding: 18px 20px; border-radius: 10px; font-size: 0.9rem; display: none; }
             .result.show { display: block; }
@@ -354,7 +381,7 @@ def home():
                     <div class="step-card">
                         <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3"/></svg></div>
                         <h3>1. Captura</h3>
-                        <p>Se ubica la conjuntiva dentro del marco guia de la camara.</p>
+                        <p>Subes una foto o usas la camara con guia.</p>
                     </div>
                     <div class="step-card">
                         <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>
@@ -378,16 +405,64 @@ def home():
                     </div>
                 </div>
                 <div class="cta-row">
-                    <button class="btn-primary" onclick="closeModal('modalHow'); openModal('modalDetector');">Iniciar mi analisis ahora</button>
+                    <button class="btn-primary" onclick="closeModal('modalHow'); resetDetectorView(); openModal('modalDetector');">Iniciar mi analisis ahora</button>
                 </div>
             </div>
         </div>
 
-        <!-- Modal 3: Detector -->
+        <!-- Modal 3: Seleccion de metodo -->
         <div class="overlay" id="modalDetector">
             <div class="modal">
-                <button class="modal-close" onclick="cerrarDetector()">&times;</button>
-                <h2>Analisis por imagen</h2>
+                <button class="modal-close" onclick="closeModal('modalDetector')">&times;</button>
+
+                <div id="opcionesSeccion">
+                    <h2>Analisis por imagen</h2>
+                    <p class="modal-sub">Elige como quieres proporcionar la fotografia.</p>
+                    <div class="option-grid">
+                        <button class="option-card" onclick="mostrarSubida()">
+                            <div class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+                            <h3>Subir archivo</h3>
+                            <p>Selecciona una foto ya tomada desde tu dispositivo.</p>
+                        </button>
+                        <button class="option-card" onclick="abrirCamara()">
+                            <div class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3"/></svg></div>
+                            <h3>Tomar foto</h3>
+                            <p>Usa la camara con guia visual en tiempo real.</p>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="uploadSeccion" style="display:none;">
+                    <button class="modal-back" onclick="volverOpciones()">&larr; Volver</button>
+                    <h2>Subir archivo</h2>
+                    <p class="modal-sub">Elige una foto donde se vea con claridad la conjuntiva palpebral inferior.</p>
+
+                    <ul class="tips">
+                        <li>Usa una foto con buena iluminacion natural</li>
+                        <li>Evita imagenes borrosas o con reflejos</li>
+                        <li>La conjuntiva debe verse claramente, sin recortes</li>
+                    </ul>
+
+                    <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+                        <p>Haz clic para seleccionar una imagen</p>
+                        <span>JPG o PNG</span>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*" onchange="onFileSelected(event)" hidden>
+                    <img id="previewUpload" src="" alt="Vista previa">
+
+                    <p class="mini-disclaimer">Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un analisis de sangre.</p>
+
+                    <div id="resultUpload" class="result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal 4: Camara guiada -->
+        <div class="overlay" id="modalCamera">
+            <div class="modal">
+                <button class="modal-close" onclick="cerrarCamara()">&times;</button>
+                <button class="modal-back" onclick="cerrarCamara()">&larr; Volver</button>
+                <h2>Captura guiada</h2>
                 <p class="modal-sub">Activa la camara y ubica la conjuntiva dentro del marco guia.</p>
 
                 <div class="detector-grid">
@@ -413,13 +488,12 @@ def home():
                                 <canvas id="cropCanvas"></canvas>
                             </div>
                             <div class="camera-controls">
-                                <button class="ctrl" id="startBtn" onclick="iniciarCamara()">Activar camara</button>
-                                <button class="ctrl" id="captureBtn" onclick="capturar()" disabled>Capturar y analizar</button>
-                                <button class="ctrl" id="retryBtn" onclick="reiniciar()" style="display:none;">Realizar otro analisis</button>
+                                <button class="ctrl solid" id="startBtn" onclick="iniciarCamara()">Activar camara</button>
+                                <button class="ctrl outline" id="captureBtn" onclick="capturar()" disabled>Capturar y analizar</button>
+                                <button class="ctrl ghost" id="retryBtn" onclick="reiniciarCamara()" style="display:none;">Realizar otro analisis</button>
                             </div>
                         </div>
-                        <img id="preview" src="" alt="Vista previa recortada">
-                        <div id="result" class="result"></div>
+                        <div id="resultCamera" class="result"></div>
                     </div>
                 </div>
             </div>
@@ -436,15 +510,57 @@ def home():
                     document.body.classList.remove('no-scroll');
                 }
             }
-            function cerrarDetector() {
-                detenerCamara();
-                closeModal('modalDetector');
+
+            /* ---- Navegacion entre pantallas del selector ---- */
+            function resetDetectorView() {
+                document.getElementById('opcionesSeccion').style.display = 'block';
+                document.getElementById('uploadSeccion').style.display = 'none';
+                const resultUpload = document.getElementById('resultUpload');
+                resultUpload.innerHTML = '';
+                resultUpload.className = 'result';
+                document.getElementById('previewUpload').style.display = 'none';
+                document.getElementById('fileInput').value = '';
+            }
+            function mostrarSubida() {
+                document.getElementById('opcionesSeccion').style.display = 'none';
+                document.getElementById('uploadSeccion').style.display = 'block';
+            }
+            function volverOpciones() {
+                resetDetectorView();
             }
 
+            function abrirCamara() {
+                closeModal('modalDetector');
+                reiniciarCamara();
+                openModal('modalCamera');
+            }
+            function cerrarCamara() {
+                detenerCamara();
+                closeModal('modalCamera');
+                resetDetectorView();
+                openModal('modalDetector');
+            }
+
+            /* ---- Subida de archivo ---- */
+            function onFileSelected(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.getElementById('previewUpload');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+
+                enviarImagen(file, 'resultUpload');
+            }
+
+            /* ---- Camara guiada ---- */
             const video = document.getElementById('video');
             const captureCanvas = document.getElementById('captureCanvas');
             const cropCanvas = document.getElementById('cropCanvas');
-            const preview = document.getElementById('preview');
             let stream = null;
 
             const GUIA = { xPct: 0.20, yPct: 0.30, wPct: 0.60, hPct: 0.35 };
@@ -458,7 +574,7 @@ def home():
                     document.getElementById('startBtn').style.display = 'none';
                     document.getElementById('captureBtn').disabled = false;
                 } catch (e) {
-                    showResult('No se pudo acceder a la camara. Revisa los permisos del navegador.', 'error');
+                    showResult('No se pudo acceder a la camara. Revisa los permisos del navegador.', 'error', 'resultCamera');
                 }
             }
 
@@ -478,11 +594,9 @@ def home():
                 const cctx = cropCanvas.getContext('2d');
                 cctx.drawImage(captureCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
-                preview.src = cropCanvas.toDataURL('image/jpeg', 0.92);
-                preview.style.display = 'block';
-
                 detenerCamara();
-                enviarParaAnalisis();
+                cropCanvas.toBlob((blob) => enviarImagen(blob, 'resultCamera'), 'image/jpeg', 0.92);
+                document.getElementById('retryBtn').style.display = 'inline-block';
             }
 
             function detenerCamara() {
@@ -490,60 +604,54 @@ def home():
                 document.getElementById('captureBtn').style.display = 'none';
             }
 
-            async function enviarParaAnalisis() {
-                const resultDiv = document.getElementById('result');
-                resultDiv.className = 'result show';
-                resultDiv.innerHTML = "Verificando calidad de la imagen...";
-
-                cropCanvas.toBlob(async (blob) => {
-                    const formData = new FormData();
-                    formData.append('image', blob, 'captura.jpg');
-
-                    resultDiv.innerHTML = "Analizando mediante inteligencia artificial...";
-
-                    try {
-                        const res = await fetch('/predict', { method: 'POST', body: formData });
-                        const data = await res.json();
-
-                        if (data.error) {
-                            showResult(data.error, "error");
-                            document.getElementById('retryBtn').style.display = 'inline-block';
-                        } else {
-                            let cls = 'normal';
-                            let etiqueta = data.result;
-                            if (data.result.includes('POSIBLE')) cls = 'posible';
-                            else if (data.result.includes('ANEMIA DETECTADA')) cls = 'anemia';
-                            etiqueta = etiqueta.replace(/^[^A-Za-zÁÉÍÓÚáéíóúÑñ]+/, '').trim();
-
-                            showResult(`
-                                <div class="result-label">Resultado del analisis</div>
-                                <div class="result-value">${etiqueta}</div>
-                                <div>Confianza del modelo: ${data.confidence}%</div>
-                                <div>Metodo: analisis de imagen mediante inteligencia artificial</div>
-                                <div class="disclaimer">Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un analisis de sangre.</div>
-                            `, cls);
-                            document.getElementById('retryBtn').style.display = 'inline-block';
-                        }
-                    } catch (e) {
-                        showResult("Error de conexion. Intenta de nuevo.", "error");
-                        document.getElementById('retryBtn').style.display = 'inline-block';
-                    }
-                }, 'image/jpeg', 0.92);
-            }
-
-            function reiniciar() {
-                const resultDiv = document.getElementById('result');
+            function reiniciarCamara() {
+                const resultDiv = document.getElementById('resultCamera');
                 resultDiv.innerHTML = '';
                 resultDiv.className = 'result';
-                preview.style.display = 'none';
                 document.getElementById('retryBtn').style.display = 'none';
                 document.getElementById('captureBtn').style.display = 'inline-block';
                 document.getElementById('startBtn').style.display = 'inline-block';
                 document.getElementById('captureBtn').disabled = true;
             }
 
-            function showResult(html, cls) {
-                const div = document.getElementById('result');
+            /* ---- Envio generico al backend (usado por camara y por subida) ---- */
+            async function enviarImagen(blob, resultId) {
+                const resultDiv = document.getElementById(resultId);
+                resultDiv.className = 'result show';
+                resultDiv.innerHTML = "Verificando calidad de la imagen...";
+
+                const formData = new FormData();
+                formData.append('image', blob, 'imagen.jpg');
+
+                resultDiv.innerHTML = "Analizando mediante inteligencia artificial...";
+
+                try {
+                    const res = await fetch('/predict', { method: 'POST', body: formData });
+                    const data = await res.json();
+
+                    if (data.error) {
+                        showResult(data.error, "error", resultId);
+                    } else {
+                        let cls = 'normal';
+                        let etiqueta = data.result;
+                        if (data.result.includes('POSIBLE')) cls = 'posible';
+                        else if (data.result.includes('ANEMIA DETECTADA')) cls = 'anemia';
+
+                        showResult(`
+                            <div class="result-label">Resultado del analisis</div>
+                            <div class="result-value">${etiqueta}</div>
+                            <div>Confianza del modelo: ${data.confidence}%</div>
+                            <div>Metodo: analisis de imagen mediante inteligencia artificial</div>
+                            <div class="disclaimer">Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un analisis de sangre.</div>
+                        `, cls, resultId);
+                    }
+                } catch (e) {
+                    showResult("Error de conexion. Intenta de nuevo.", "error", resultId);
+                }
+            }
+
+            function showResult(html, cls, resultId) {
+                const div = document.getElementById(resultId);
                 div.innerHTML = html;
                 div.className = 'result show ' + cls;
             }
