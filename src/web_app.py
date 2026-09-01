@@ -130,12 +130,12 @@ def home():
         <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
             :root {
-                --bg: #15120F; --panel: #1E1A17; --panel-2: #241F1B; --text: #F5F0E8;
-                --text-soft: #B9B2A8; --text-faint: #7C766C; --accent: #D2543F;
-                --accent-strong: #E8674F; --accent-soft: rgba(210, 84, 63, 0.14);
-                --teal: #3FAFA6; --teal-soft: rgba(63, 175, 166, 0.14);
-                --amber: #D9A54B; --amber-soft: rgba(217, 165, 75, 0.14);
-                --border: rgba(245, 240, 232, 0.10);
+                --bg: #EEF1EE; --panel: #FFFFFF; --panel-2: #F4F6F3; --text: #1C2321;
+                --text-soft: #52605B; --text-faint: #7C877F; --accent: #9C3B2E;
+                --accent-strong: #832F24; --accent-soft: rgba(156, 59, 46, 0.10);
+                --teal: #1F6F6B; --teal-soft: rgba(31, 111, 107, 0.10);
+                --amber: #96690F; --amber-soft: rgba(150, 105, 15, 0.10);
+                --border: #D9DCD5;
             }
             * { box-sizing: border-box; }
             html, body { margin: 0; padding: 0; }
@@ -165,7 +165,7 @@ def home():
             .brand-name span { color: var(--accent); }
             .nav-cta {
                 font-family: 'Work Sans', sans-serif; font-weight: 600; font-size: 0.85rem;
-                padding: 10px 22px; background: var(--accent); color: #17120F;
+                padding: 10px 22px; background: var(--accent); color: #FBF6F2;
                 border: none; border-radius: 24px; cursor: pointer; transition: background .2s ease, transform .2s ease;
             }
             .nav-cta:hover { background: var(--accent-strong); transform: translateY(-1px); }
@@ -183,7 +183,7 @@ def home():
             .hero-actions { display: flex; align-items: center; gap: 22px; margin-bottom: 40px; flex-wrap: wrap; justify-content: center; }
             .btn-primary {
                 font-family: 'Work Sans', sans-serif; font-weight: 600; font-size: 0.95rem;
-                padding: 14px 32px; background: var(--accent); color: #17120F; border: none;
+                padding: 14px 32px; background: var(--accent); color: #FBF6F2; border: none;
                 border-radius: 30px; cursor: pointer; transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
             }
             .btn-primary:hover { background: var(--accent-strong); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(210,84,63,0.28); }
@@ -207,11 +207,11 @@ def home():
             }
             .modal-close {
                 position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%;
-                background: rgba(245,240,232,0.06); border: 1px solid var(--border);
+                background: rgba(28,35,33,0.05); border: 1px solid var(--border);
                 color: var(--text-soft); font-size: 1rem; cursor: pointer;
                 display: flex; align-items: center; justify-content: center; z-index: 2;
             }
-            .modal-close:hover { color: var(--text); background: rgba(245,240,232,0.12); }
+            .modal-close:hover { color: var(--text); background: rgba(28,35,33,0.10); }
             .modal-back {
                 background: none; border: none; color: var(--text-soft); font-size: 0.82rem;
                 cursor: pointer; padding: 0; margin-bottom: 18px; font-family: 'Work Sans', sans-serif;
@@ -292,7 +292,7 @@ def home():
                 padding: 10px 18px; border: 1px solid transparent; border-radius: 24px; cursor: pointer;
                 transition: background .15s ease, border-color .15s ease;
             }
-            .ctrl.solid { background: var(--accent); color: #17120F; }
+            .ctrl.solid { background: var(--accent); color: #FBF6F2; }
             .ctrl.solid:hover { background: var(--accent-strong); }
             .ctrl.outline { background: transparent; color: var(--text); border-color: rgba(245,240,232,0.25); }
             .ctrl.outline:hover:not(:disabled) { border-color: var(--text); }
@@ -309,16 +309,16 @@ def home():
             .result.posible .result-value { color: var(--amber); }
             .result.normal { background: var(--teal-soft); }
             .result.normal .result-value { color: var(--teal); }
-            .result.error { background: rgba(245,240,232,0.05); border: 1px solid var(--border); color: var(--text-soft); }
-            .result .disclaimer { font-size: 0.74rem; color: var(--text-faint); margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(245,240,232,0.08); }
+            .result.error { background: var(--panel-2); border: 1px solid var(--border); color: var(--text-soft); }
+            .result .disclaimer { font-size: 0.74rem; color: var(--text-faint); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
         </style>
     </head>
     <body>
         <nav class="navbar">
             <div class="brand">
                 <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 5C20 5 10 15 10 25C10 30.523 14.477 35 20 35C25.523 35 30 30.523 30 25C30 15 20 5 20 5Z" stroke="#D2543F" stroke-width="1.5" fill="none" opacity="0.8"/>
-                    <path d="M20 12C20 12 15 18 15 24C15 26.761 17.239 29 20 29C22.761 29 25 26.761 25 24C25 18 20 12 20 12Z" stroke="#D2543F" stroke-width="1" fill="none" opacity="0.5"/>
+                    <path d="M20 5C20 5 10 15 10 25C10 30.523 14.477 35 20 35C25.523 35 30 30.523 30 25C30 15 20 5 20 5Z" stroke="#9C3B2E" stroke-width="1.5" fill="none" opacity="0.8"/>
+                    <path d="M20 12C20 12 15 18 15 24C15 26.761 17.239 29 20 29C22.761 29 25 26.761 25 24C25 18 20 12 20 12Z" stroke="#9C3B2E" stroke-width="1" fill="none" opacity="0.5"/>
                 </svg>
                 <div class="brand-name">Golden Detect <span>Anemic</span></div>
             </div>
@@ -328,9 +328,9 @@ def home():
         <section class="hero">
             <div class="hero-icon">
                 <svg viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M30 5C30 5 10 20 10 40C10 55 19 68 30 75C41 68 50 55 50 40C50 20 30 5 30 5Z" stroke="#D2543F" stroke-width="1.5" fill="none" opacity="0.6"/>
-                    <path d="M30 15C30 15 18 25 18 40C18 50 23 60 30 65C37 60 42 50 42 40C42 25 30 15 30 15Z" stroke="#D2543F" stroke-width="1" fill="none" opacity="0.35"/>
-                    <path d="M30 25C30 25 24 32 24 40C24 45 26 50 30 53C34 50 36 45 36 40C36 32 30 25 30 25Z" stroke="#D2543F" stroke-width="0.8" fill="none" opacity="0.22"/>
+                    <path d="M30 5C30 5 10 20 10 40C10 55 19 68 30 75C41 68 50 55 50 40C50 20 30 5 30 5Z" stroke="#9C3B2E" stroke-width="1.5" fill="none" opacity="0.6"/>
+                    <path d="M30 15C30 15 18 25 18 40C18 50 23 60 30 65C37 60 42 50 42 40C42 25 30 15 30 15Z" stroke="#9C3B2E" stroke-width="1" fill="none" opacity="0.35"/>
+                    <path d="M30 25C30 25 24 32 24 40C24 45 26 50 30 53C34 50 36 45 36 40C36 32 30 25 30 25Z" stroke="#9C3B2E" stroke-width="0.8" fill="none" opacity="0.22"/>
                 </svg>
             </div>
             <h1>Evaluacion preliminar de anemia mediante inteligencia artificial</h1>
@@ -619,7 +619,6 @@ def home():
                             <div class="result-label">Resultado del analisis</div>
                             <div class="result-value">${etiqueta}</div>
                             <div>Confianza del modelo: ${data.confidence}%</div>
-                            <div>Metodo: analisis de imagen mediante inteligencia artificial</div>
                             <div class="disclaimer">Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un analisis de sangre.</div>
                         `, cls, resultId);
                     }
