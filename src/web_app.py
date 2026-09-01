@@ -10,7 +10,7 @@ import base64
 
 app = Flask(__name__)
 
-# Cargar el modelo (SIN MODIFICAR, EL PROTAGONISTA)
+# Cargar el modelo (EL PROTAGONISTA)
 try:
     model = load_model('models/final_model.h5')
     print("Modelo cargado correctamente")
@@ -594,13 +594,14 @@ def home():
                         let etiqueta = data.result;
                         if (data.result.includes('POSIBLE')) cls = 'posible';
                         else if (data.result.includes('ANEMIA DETECTADA')) cls = 'anemia';
-                        showResult(\`
+                        
+                        showResult(`
                             <div class="result-label">Resultado del analisis</div>
-                            <div class="result-value">\${etiqueta}</div>
-                            <div>Confianza del modelo: \${data.confidence}%</div>
+                            <div class="result-value">${etiqueta}</div>
+                            <div>Confianza del modelo: ${data.confidence}%</div>
                             <div>Metodo: analisis de imagen mediante inteligencia artificial</div>
                             <div class="disclaimer">Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un analisis de sangre.</div>
-                        \`, cls, resultId);
+                        `, cls, resultId);
                     }
                 } catch (e) {
                     showResult("Error de conexion. Intenta de nuevo.", "error", resultId);
