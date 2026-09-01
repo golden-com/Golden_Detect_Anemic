@@ -30,13 +30,17 @@ def validar_calidad_imagen(ruta_imagen):
     gris = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     brillo = float(np.mean(gris))
+    nitidez = float(cv2.Laplacian(gris, cv2.CV_64F).var())
+
+    # Log para calibrar los umbrales con fotos reales (visible en los logs de Render)
+    print(f"[calidad] brillo={brillo:.1f}  nitidez={nitidez:.1f}")
+
     if brillo < 40:
         return False, "La imagen esta demasiado oscura. Mejora la iluminacion e intenta de nuevo."
     if brillo > 235:
         return False, "La imagen tiene demasiado brillo o reflejo. Evita luz directa muy fuerte."
 
-    nitidez = float(cv2.Laplacian(gris, cv2.CV_64F).var())
-    if nitidez < 60:
+    if nitidez < 20:
         return False, "La fotografia parece borrosa. Manten la camara firme y enfocada."
 
     return True, "OK"
