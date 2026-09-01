@@ -5,10 +5,12 @@ import cv2
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 import os
+import requests
+import base64
 
 app = Flask(__name__)
 
-# Cargar el modelo (SIN MODIFICAR)
+# Cargar el modelo (SIN MODIFICAR, EL PROTAGONISTA)
 try:
     model = load_model('models/final_model.h5')
     print("Modelo cargado correctamente")
@@ -18,9 +20,57 @@ except Exception as e:
 
 
 # ============================================================
-# VALIDACION DE CALIDAD DE IMAGEN (nueva etapa, seccion 11)
-# NO detecta conjuntiva, NO decide el resultado.
-# Solo comprueba brillo y nitidez minimos con OpenCV.
+# FUNCION DE APOYO: GEMINI (Segunda opinión en zona gris)
+# ============================================================
+def consultar_gemini(ruta_imagen):
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return None  # Si no hay clave, retorna None y el sistema sigue solo con tu modelo local
+    
+    try:
+        with open(ruta_imagen, "rb") as f:
+            image_data = base64.b64encode(f.read()).decode('utf-8')
+        
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": "Eres un asistente de apoyo médico. Analiza esta imagen de un ojo humano, enfocándote específicamente en la conjuntiva palpebral inferior. Indica si observas palidez significativa que sugiera anemia. Responde ÚNICAMENTE con una de estas tres frases exactas: 'ANEMIA DETECTADA', 'POSIBLE ANEMIA', o 'SIN ANEMIA'. No uses comillas, no agregues explicaciones, ni saludos, ni otro texto."
+                        },
+                        {
+                            "inline_data": {
+                                "mime_type": "image/jpeg",
+                                "data": image_data
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+        
+        # Timeout de 8 segundos: si tarda más, falla elegantemente y usa solo el modelo local
+        response = requests.post(url, json=payload, timeout=8)
+        response.raise_for_status()
+        data = response.json()
+        texto = data["candidates"][0]["content"]["parts"][0]["text"].strip().upper()
+        
+        if "ANEMIA DETECTADA" in texto:
+            return "ANEMIA DETECTADA"
+        elif "SIN ANEMIA" in texto:
+            return "SIN ANEMIA"
+        else:
+            return "POSIBLE ANEMIA"
+            
+    except Exception as e:
+        print(f"[Gemini] Error o sin respuesta (se usa solo el modelo local): {e}")
+        return None
+
+
+# ============================================================
+# VALIDACION DE CALIDAD DE IMAGEN
 # ============================================================
 def validar_calidad_imagen(ruta_imagen):
     img = cv2.imread(ruta_imagen)
@@ -28,18 +78,15 @@ def validar_calidad_imagen(ruta_imagen):
         return False, "No se pudo leer la imagen."
 
     gris = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
     brillo = float(np.mean(gris))
     nitidez = float(cv2.Laplacian(gris, cv2.CV_64F).var())
 
-    # Log para calibrar los umbrales con fotos reales (visible en los logs de Render)
     print(f"[calidad] brillo={brillo:.1f}  nitidez={nitidez:.1f}")
 
     if brillo < 40:
         return False, "La imagen esta demasiado oscura. Mejora la iluminacion e intenta de nuevo."
     if brillo > 235:
         return False, "La imagen tiene demasiado brillo o reflejo. Evita luz directa muy fuerte."
-
     if nitidez < 20:
         return False, "La fotografia parece borrosa. Manten la camara firme y enfocada."
 
@@ -59,53 +106,33 @@ def home():
         <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
             :root {
-                --bg: #15120F;
-                --panel: #1E1A17;
-                --panel-2: #241F1B;
-                --text: #F5F0E8;
-                --text-soft: #B9B2A8;
-                --text-faint: #7C766C;
-                --accent: #D2543F;
-                --accent-strong: #E8674F;
-                --accent-soft: rgba(210, 84, 63, 0.14);
-                --teal: #3FAFA6;
-                --teal-soft: rgba(63, 175, 166, 0.14);
-                --amber: #D9A54B;
-                --amber-soft: rgba(217, 165, 75, 0.14);
+                --bg: #15120F; --panel: #1E1A17; --panel-2: #241F1B; --text: #F5F0E8;
+                --text-soft: #B9B2A8; --text-faint: #7C766C; --accent: #D2543F;
+                --accent-strong: #E8674F; --accent-soft: rgba(210, 84, 63, 0.14);
+                --teal: #3FAFA6; --teal-soft: rgba(63, 175, 166, 0.14);
+                --amber: #D9A54B; --amber-soft: rgba(217, 165, 75, 0.14);
                 --border: rgba(245, 240, 232, 0.10);
             }
             * { box-sizing: border-box; }
             html, body { margin: 0; padding: 0; }
             body {
-                font-family: 'Work Sans', sans-serif;
-                background: var(--bg);
-                color: var(--text);
-                min-height: 100vh;
-                overflow-x: hidden;
-                line-height: 1.55;
+                font-family: 'Work Sans', sans-serif; background: var(--bg); color: var(--text);
+                min-height: 100vh; overflow-x: hidden; line-height: 1.55;
             }
             body.no-scroll { overflow: hidden; }
-
             body::before {
-                content: '';
-                position: fixed; inset: 0;
-                background-image:
-                    linear-gradient(rgba(210,84,63,0.035) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(210,84,63,0.035) 1px, transparent 1px);
-                background-size: 56px 56px;
-                pointer-events: none; z-index: 0;
+                content: ''; position: fixed; inset: 0;
+                background-image: linear-gradient(rgba(210,84,63,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(210,84,63,0.035) 1px, transparent 1px);
+                background-size: 56px 56px; pointer-events: none; z-index: 0;
             }
             body::after {
-                content: '';
-                position: fixed; top: -15%; left: 50%; transform: translateX(-50%);
+                content: ''; position: fixed; top: -15%; left: 50%; transform: translateX(-50%);
                 width: 900px; height: 700px;
                 background: radial-gradient(circle, rgba(210,84,63,0.10) 0%, transparent 70%);
                 pointer-events: none; z-index: 0;
             }
-
             .navbar {
-                position: relative; z-index: 5;
-                display: flex; align-items: center; justify-content: space-between;
+                position: relative; z-index: 5; display: flex; align-items: center; justify-content: space-between;
                 padding: 20px 40px;
             }
             .brand { display: flex; align-items: center; gap: 10px; }
@@ -118,12 +145,9 @@ def home():
                 border: none; border-radius: 24px; cursor: pointer; transition: background .2s ease, transform .2s ease;
             }
             .nav-cta:hover { background: var(--accent-strong); transform: translateY(-1px); }
-
             .hero {
-                position: relative; z-index: 1;
-                display: flex; flex-direction: column; align-items: center; text-align: center;
-                padding: 40px 20px 70px; min-height: calc(100vh - 90px);
-                justify-content: center;
+                position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center;
+                padding: 40px 20px 70px; min-height: calc(100vh - 90px); justify-content: center;
             }
             .hero-icon svg { width: 54px; height: 72px; opacity: 0.7; margin-bottom: 26px; }
             .hero h1 {
@@ -132,7 +156,6 @@ def home():
             }
             .hero-subtitle { font-size: 1rem; color: var(--text-soft); margin: 0 0 14px; }
             .hero-description { font-size: 0.92rem; color: var(--text-faint); max-width: 520px; margin: 0 0 36px; }
-
             .hero-actions { display: flex; align-items: center; gap: 22px; margin-bottom: 40px; flex-wrap: wrap; justify-content: center; }
             .btn-primary {
                 font-family: 'Work Sans', sans-serif; font-weight: 600; font-size: 0.95rem;
@@ -142,40 +165,27 @@ def home():
             .btn-primary:hover { background: var(--accent-strong); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(210,84,63,0.28); }
             .btn-text { color: var(--text-soft); text-decoration: none; font-size: 0.9rem; background: none; border: none; cursor: pointer; font-family: 'Work Sans', sans-serif; }
             .btn-text:hover { color: var(--text); }
-
             .trust-badges { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; justify-content: center; margin-bottom: 44px; }
             .trust-badge { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--text-faint); }
             .trust-badge svg { width: 14px; height: 14px; color: var(--teal); }
-
             .credit { text-align: center; }
             .credit-eureka { display: inline-block; font-family: 'Fraunces', serif; font-size: 0.85rem; color: var(--accent); border: 1px solid var(--border); padding: 6px 16px; border-radius: 20px; margin-bottom: 6px; }
             .credit-inst { font-size: 0.75rem; color: var(--text-faint); }
-
             .overlay {
-                position: fixed; inset: 0; z-index: 50;
-                background: rgba(10, 8, 6, 0.72);
-                display: none; align-items: center; justify-content: center;
-                padding: 24px;
+                position: fixed; inset: 0; z-index: 50; background: rgba(10, 8, 6, 0.72);
+                display: none; align-items: center; justify-content: center; padding: 24px;
             }
             .overlay.open { display: flex; }
-
             .modal {
-                position: relative;
-                background: var(--panel);
-                border: 1px solid var(--border);
-                border-radius: 18px;
-                box-shadow: 0 30px 80px rgba(0,0,0,0.5);
-                width: 100%;
-                max-height: 90vh;
-                overflow-y: auto;
+                position: relative; background: var(--panel); border: 1px solid var(--border);
+                border-radius: 18px; box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+                width: 100%; max-height: 90vh; overflow-y: auto;
             }
             .modal-close {
-                position: absolute; top: 16px; right: 16px;
-                width: 32px; height: 32px; border-radius: 50%;
+                position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%;
                 background: rgba(245,240,232,0.06); border: 1px solid var(--border);
                 color: var(--text-soft); font-size: 1rem; cursor: pointer;
-                display: flex; align-items: center; justify-content: center;
-                z-index: 2;
+                display: flex; align-items: center; justify-content: center; z-index: 2;
             }
             .modal-close:hover { color: var(--text); background: rgba(245,240,232,0.12); }
             .modal-back {
@@ -183,8 +193,6 @@ def home():
                 cursor: pointer; padding: 0; margin-bottom: 18px; font-family: 'Work Sans', sans-serif;
             }
             .modal-back:hover { color: var(--text); }
-
-            /* Modal: advertencia */
             #modalWarning .modal { max-width: 480px; padding: 44px 40px; text-align: center; }
             .warning-icon { margin-bottom: 22px; }
             .warning-icon svg { width: 52px; height: 52px; }
@@ -197,8 +205,6 @@ def home():
             .duration-badge svg { width: 14px; height: 14px; }
             .modal-text { font-size: 0.88rem; color: var(--text-soft); margin: 0 0 14px; }
             .modal-text strong { color: var(--text); }
-
-            /* Modal: como funciona */
             #modalHow .modal { max-width: 1000px; padding: 48px 44px; }
             #modalHow h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.6rem; text-align: center; margin: 0 0 8px; }
             #modalHow .modal-sub { text-align: center; color: var(--text-faint); font-size: 0.88rem; margin: 0 0 36px; }
@@ -209,12 +215,9 @@ def home():
             .step-card h3 { font-size: 0.85rem; font-weight: 600; margin: 0 0 8px; }
             .step-card p { font-size: 0.78rem; color: var(--text-faint); margin: 0; line-height: 1.6; }
             #modalHow .cta-row { text-align: center; }
-
-            /* Modal: detector (seleccion) */
             #modalDetector .modal { max-width: 640px; padding: 44px 40px; }
             #modalDetector h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.4rem; text-align: center; margin: 0 0 6px; }
             #modalDetector .modal-sub { text-align: center; color: var(--text-faint); font-size: 0.85rem; margin: 0 0 30px; }
-
             .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
             @media (max-width: 520px) { .option-grid { grid-template-columns: 1fr; } }
             .option-card {
@@ -228,7 +231,6 @@ def home():
             .option-icon svg { width: 20px; height: 20px; color: var(--accent); }
             .option-card h3 { font-size: 0.95rem; font-weight: 600; margin: 0 0 6px; }
             .option-card p { font-size: 0.78rem; color: var(--text-faint); margin: 0; line-height: 1.5; }
-
             .upload-box {
                 border: 1.5px dashed var(--border); border-radius: 12px; padding: 30px 20px;
                 text-align: center; cursor: pointer; transition: border-color .2s ease;
@@ -236,28 +238,20 @@ def home():
             .upload-box:hover { border-color: var(--accent); }
             .upload-box p { font-size: 0.85rem; color: var(--text-soft); margin: 0 0 4px; }
             .upload-box span { font-size: 0.75rem; color: var(--text-faint); }
-
             .mini-disclaimer { font-size: 0.75rem; color: var(--text-faint); border-left: 2px solid var(--border); padding-left: 12px; margin: 18px 0; }
-
             #previewUpload { max-width: 100%; max-height: 220px; border-radius: 10px; margin: 16px auto 0; display: none; }
-
-            /* Modal: camara */
             #modalCamera .modal { max-width: 900px; width: 92vw; padding: 40px 36px 36px; }
             #modalCamera h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.4rem; text-align: center; margin: 0 0 6px; }
             #modalCamera .modal-sub { text-align: center; color: var(--text-faint); font-size: 0.85rem; margin: 0 0 26px; }
-
             .detector-grid { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 32px; align-items: start; }
             @media (max-width: 760px) { .detector-grid { grid-template-columns: 1fr; } }
-
             .tips { list-style: none; padding: 0; margin: 0 0 22px; display: flex; flex-direction: column; gap: 9px; }
             .tips li { display: flex; gap: 9px; font-size: 0.82rem; color: var(--text-soft); align-items: flex-start; }
             .tips li::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 7px; flex-shrink: 0; }
-
             .camera-card { background: #0D0B09; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
             .camera-wrap { position: relative; width: 100%; aspect-ratio: 4/3; background: #0a0908; }
             video, #captureCanvas, #cropCanvas { width: 100%; height: 100%; object-fit: cover; display: block; }
             #cropCanvas, #captureCanvas { display: none; }
-
             .guide-overlay { position: absolute; inset: 0; pointer-events: none; }
             .guide-oval {
                 position: absolute; top: 30%; left: 20%; width: 60%; height: 35%;
@@ -268,7 +262,6 @@ def home():
                 position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%);
                 color: var(--text); font-size: 0.76rem; text-align: center; white-space: nowrap; letter-spacing: 0.01em;
             }
-
             .camera-controls { padding: 14px 16px; display: flex; gap: 10px; flex-wrap: wrap; }
             button.ctrl {
                 font-family: 'Work Sans', sans-serif; font-size: 0.84rem; font-weight: 500;
@@ -282,7 +275,6 @@ def home():
             .ctrl.outline:disabled { color: rgba(245,240,232,0.3); cursor: not-allowed; }
             .ctrl.ghost { background: transparent; color: var(--text-soft); border-color: var(--border); }
             .ctrl.ghost:hover { border-color: var(--text-soft); }
-
             .result { margin-top: 16px; padding: 18px 20px; border-radius: 10px; font-size: 0.9rem; display: none; }
             .result.show { display: block; }
             .result-label { font-size: 0.72rem; color: var(--text-faint); margin-bottom: 3px; }
@@ -298,7 +290,6 @@ def home():
         </style>
     </head>
     <body>
-
         <nav class="navbar">
             <div class="brand">
                 <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -318,7 +309,6 @@ def home():
                     <path d="M30 25C30 25 24 32 24 40C24 45 26 50 30 53C34 50 36 45 36 40C36 32 30 25 30 25Z" stroke="#D2543F" stroke-width="0.8" fill="none" opacity="0.22"/>
                 </svg>
             </div>
-
             <h1>Evaluacion preliminar de anemia mediante inteligencia artificial</h1>
             <p class="hero-subtitle">Una fotografia de la conjuntiva palpebral inferior, analizada en segundos</p>
             <p class="hero-description">
@@ -326,12 +316,10 @@ def home():
                 ofrecer una orientacion preliminar sobre posibles signos de anemia. No reemplaza
                 un examen medico ni un analisis de sangre.
             </p>
-
             <div class="hero-actions">
                 <button class="btn-primary" onclick="openModal('modalWarning')">Iniciar mi analisis</button>
                 <button class="btn-text" onclick="openModal('modalHow')">Descubre como funciona &darr;</button>
             </div>
-
             <div class="trust-badges">
                 <div class="trust-badge">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -346,7 +334,6 @@ def home():
                     Sin costo, uso educativo
                 </div>
             </div>
-
             <div class="credit">
                 <div class="credit-eureka">Eureka 2026 &middot; Proyecto de investigacion escolar</div>
                 <div class="credit-inst">Institucion Educativa "Victor Manuel Maurtua" &middot; Parcona, Ica</div>
@@ -418,7 +405,6 @@ def home():
         <div class="overlay" id="modalDetector">
             <div class="modal">
                 <button class="modal-close" onclick="closeModal('modalDetector')">&times;</button>
-
                 <div id="opcionesSeccion">
                     <h2>Analisis por imagen</h2>
                     <p class="modal-sub">Elige como quieres proporcionar la fotografia.</p>
@@ -435,27 +421,22 @@ def home():
                         </button>
                     </div>
                 </div>
-
                 <div id="uploadSeccion" style="display:none;">
                     <button class="modal-back" onclick="volverOpciones()">&larr; Volver</button>
                     <h2>Subir archivo</h2>
                     <p class="modal-sub">Elige una foto donde se vea con claridad la conjuntiva palpebral inferior.</p>
-
                     <ul class="tips">
                         <li>Usa una foto con buena iluminacion natural</li>
                         <li>Evita imagenes borrosas o con reflejos</li>
                         <li>La conjuntiva debe verse claramente, sin recortes</li>
                     </ul>
-
                     <div class="upload-box" onclick="document.getElementById('fileInput').click()">
                         <p>Haz clic para seleccionar una imagen</p>
                         <span>JPG o PNG</span>
                     </div>
                     <input type="file" id="fileInput" accept="image/*" onchange="onFileSelected(event)" hidden>
                     <img id="previewUpload" src="" alt="Vista previa">
-
                     <p class="mini-disclaimer">Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un analisis de sangre.</p>
-
                     <div id="resultUpload" class="result"></div>
                 </div>
             </div>
@@ -468,7 +449,6 @@ def home():
                 <button class="modal-back" onclick="cerrarCamara()">&larr; Volver</button>
                 <h2>Captura guiada</h2>
                 <p class="modal-sub">Activa la camara y ubica la conjuntiva dentro del marco guia.</p>
-
                 <div class="detector-grid">
                     <div>
                         <ul class="tips">
@@ -479,7 +459,6 @@ def home():
                         </ul>
                         <p class="mini-disclaimer">Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un analisis de sangre.</p>
                     </div>
-
                     <div>
                         <div class="camera-card">
                             <div class="camera-wrap">
@@ -514,8 +493,6 @@ def home():
                     document.body.classList.remove('no-scroll');
                 }
             }
-
-            /* ---- Navegacion entre pantallas del selector ---- */
             function resetDetectorView() {
                 document.getElementById('opcionesSeccion').style.display = 'block';
                 document.getElementById('uploadSeccion').style.display = 'none';
@@ -529,10 +506,7 @@ def home():
                 document.getElementById('opcionesSeccion').style.display = 'none';
                 document.getElementById('uploadSeccion').style.display = 'block';
             }
-            function volverOpciones() {
-                resetDetectorView();
-            }
-
+            function volverOpciones() { resetDetectorView(); }
             function abrirCamara() {
                 closeModal('modalDetector');
                 reiniciarCamara();
@@ -544,12 +518,9 @@ def home():
                 resetDetectorView();
                 openModal('modalDetector');
             }
-
-            /* ---- Subida de archivo ---- */
             function onFileSelected(event) {
                 const file = event.target.files[0];
                 if (!file) return;
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = document.getElementById('previewUpload');
@@ -557,18 +528,13 @@ def home():
                     img.style.display = 'block';
                 };
                 reader.readAsDataURL(file);
-
                 enviarImagen(file, 'resultUpload');
             }
-
-            /* ---- Camara guiada ---- */
             const video = document.getElementById('video');
             const captureCanvas = document.getElementById('captureCanvas');
             const cropCanvas = document.getElementById('cropCanvas');
             let stream = null;
-
             const GUIA = { xPct: 0.20, yPct: 0.30, wPct: 0.60, hPct: 0.35 };
-
             async function iniciarCamara() {
                 try {
                     stream = await navigator.mediaDevices.getUserMedia({
@@ -581,33 +547,27 @@ def home():
                     showResult('No se pudo acceder a la camara. Revisa los permisos del navegador.', 'error', 'resultCamera');
                 }
             }
-
             function capturar() {
                 captureCanvas.width = video.videoWidth;
                 captureCanvas.height = video.videoHeight;
                 const ctx = captureCanvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
-
                 const cropX = GUIA.xPct * captureCanvas.width;
                 const cropY = GUIA.yPct * captureCanvas.height;
                 const cropW = GUIA.wPct * captureCanvas.width;
                 const cropH = GUIA.hPct * captureCanvas.height;
-
                 cropCanvas.width = cropW;
                 cropCanvas.height = cropH;
                 const cctx = cropCanvas.getContext('2d');
                 cctx.drawImage(captureCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-
                 detenerCamara();
                 cropCanvas.toBlob((blob) => enviarImagen(blob, 'resultCamera'), 'image/jpeg', 0.92);
                 document.getElementById('retryBtn').style.display = 'inline-block';
             }
-
             function detenerCamara() {
                 if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
                 document.getElementById('captureBtn').style.display = 'none';
             }
-
             function reiniciarCamara() {
                 const resultDiv = document.getElementById('resultCamera');
                 resultDiv.innerHTML = '';
@@ -617,22 +577,16 @@ def home():
                 document.getElementById('startBtn').style.display = 'inline-block';
                 document.getElementById('captureBtn').disabled = true;
             }
-
-            /* ---- Envio generico al backend (usado por camara y por subida) ---- */
             async function enviarImagen(blob, resultId) {
                 const resultDiv = document.getElementById(resultId);
                 resultDiv.className = 'result show';
                 resultDiv.innerHTML = "Verificando calidad de la imagen...";
-
                 const formData = new FormData();
                 formData.append('image', blob, 'imagen.jpg');
-
                 resultDiv.innerHTML = "Analizando mediante inteligencia artificial...";
-
                 try {
                     const res = await fetch('/predict', { method: 'POST', body: formData });
                     const data = await res.json();
-
                     if (data.error) {
                         showResult(data.error, "error", resultId);
                     } else {
@@ -640,20 +594,18 @@ def home():
                         let etiqueta = data.result;
                         if (data.result.includes('POSIBLE')) cls = 'posible';
                         else if (data.result.includes('ANEMIA DETECTADA')) cls = 'anemia';
-
-                        showResult(`
+                        showResult(\`
                             <div class="result-label">Resultado del analisis</div>
-                            <div class="result-value">${etiqueta}</div>
-                            <div>Confianza del modelo: ${data.confidence}%</div>
+                            <div class="result-value">\${etiqueta}</div>
+                            <div>Confianza del modelo: \${data.confidence}%</div>
                             <div>Metodo: analisis de imagen mediante inteligencia artificial</div>
                             <div class="disclaimer">Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un analisis de sangre.</div>
-                        `, cls, resultId);
+                        \`, cls, resultId);
                     }
                 } catch (e) {
                     showResult("Error de conexion. Intenta de nuevo.", "error", resultId);
                 }
             }
-
             function showResult(html, cls, resultId) {
                 const div = document.getElementById(resultId);
                 div.innerHTML = html;
@@ -682,26 +634,43 @@ def predict():
     file.save(temp_path)
 
     try:
+        # 1. Validar calidad
         ok, mensaje = validar_calidad_imagen(temp_path)
         if not ok:
             os.remove(temp_path)
             return jsonify({'error': mensaje}), 400
 
+        # 2. Preprocesar y predecir con el modelo local (EL PROTAGONISTA)
         img = image.load_img(temp_path, target_size=(224, 224))
         img_array = image.img_to_array(img) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
 
-        prediction = model.predict(img_array)[0][0]
+        prediction = float(model.predict(img_array)[0][0])
+
+        # 3. Lógica de decisión híbrida
+        if 0.5 < prediction <= 0.7:
+            # Zona gris: consultamos a Gemini como segunda opinión
+            gemini_opinion = consultar_gemini(temp_path)
+            
+            if gemini_opinion == "ANEMIA DETECTADA":
+                result = "POSIBLE ANEMIA (Refuerzo: IA externa sugiere consultar médico)"
+            elif gemini_opinion == "SIN ANEMIA":
+                result = "SIN ANEMIA (Refuerzo: IA externa no detecta signos claros)"
+            else:
+                result = "POSIBLE ANEMIA (Consulta médica recomendada)"
+        elif prediction > 0.7:
+            result = "ANEMIA DETECTADA"
+        else:
+            result = "SIN ANEMIA"
+
+        # 4. Limpiar archivo temporal
         os.remove(temp_path)
 
-        if prediction > 0.7:
-            result = 'ANEMIA DETECTADA'
-        elif prediction > 0.5:
-            result = 'POSIBLE ANEMIA'
+        # 5. Calcular confianza para la UI
+        if prediction > 0.5:
+            confidence = prediction * 100
         else:
-            result = 'SIN ANEMIA'
-
-        confidence = (prediction if prediction > 0.5 else 1 - prediction) * 100
+            confidence = (1 - prediction) * 100
 
         return jsonify({
             'result': result,
