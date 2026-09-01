@@ -6,14 +6,10 @@ import os
 import requests
 import base64
 
-# ============================================================
-# OPTIMIZACION DE MEMORIA PARA TENSORFLOW (CRITICO EN RENDER)
-# ============================================================
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Silenciar logs de TensorFlow
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 tf.get_logger().setLevel('ERROR')
 
-# Desactivar GPU y limitar crecimiento de memoria
 tf.config.set_visible_devices([], 'GPU')
 gpus = tf.config.list_physical_devices('GPU')
 if gpus:
@@ -28,7 +24,6 @@ from tensorflow.keras.preprocessing import image
 
 app = Flask(__name__)
 
-# Cargar el modelo (EL PROTAGONISTA)
 try:
     model = load_model('models/final_model.h5')
     print("Modelo cargado correctamente")
@@ -37,9 +32,48 @@ except Exception as e:
     model = None
 
 
-# ============================================================
-# FUNCION DE APOYO: GEMINI (Segunda opinión en zona gris)
-# ============================================================
+def validar_imagen_es_ojo(ruta_imagen):
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return True, "OK"
+    
+    try:
+        with open(ruta_imagen, "rb") as f:
+            image_data = base64.b64encode(f.read()).decode('utf-8')
+        
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        
+        payload = {
+            "contents": [{
+                "parts": [
+                    {
+                        "text": "Analiza esta imagen. Es una fotografia clara de un ojo humano donde se puede ver la conjuntiva palpebral inferior? Responde UNICAMENTE con 'SI' si es un ojo valido con conjuntiva visible, o 'NO' si no es un ojo, esta muy borroso, no se ve la conjuntiva, o es una imagen no relacionada."
+                    },
+                    {
+                        "inline_data": {
+                            "mime_type": "image/jpeg",
+                            "data": image_data
+                        }
+                    }
+                ]
+            }]
+        }
+        
+        response = requests.post(url, json=payload, timeout=8)
+        response.raise_for_status()
+        data = response.json()
+        texto = data["candidates"][0]["content"]["parts"][0]["text"].strip().upper()
+        
+        if "NO" in texto:
+            return False, "LA IMAGEN BRINDADA NO CONTIENE LA CONJUNTIVA PALPEBRAL REQUERIDA. Por favor, toma una foto clara del ojo donde se vea la parte interna del parpado inferior (conjuntiva). La foto debe estar enfocada, con buena iluminacion y mostrar claramente el ojo."
+        else:
+            return True, "OK"
+            
+    except Exception as e:
+        print(f"[Validacion ojo] Error: {e}")
+        return True, "OK"
+
+
 def consultar_gemini(ruta_imagen):
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -52,21 +86,19 @@ def consultar_gemini(ruta_imagen):
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
         
         payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": "Eres un asistente de apoyo médico. Analiza esta imagen de un ojo humano, enfocándote específicamente en la conjuntiva palpebral inferior. Indica si observas palidez significativa que sugiera anemia. Responde ÚNICAMENTE con una de estas tres frases exactas: 'ANEMIA DETECTADA', 'POSIBLE ANEMIA', o 'SIN ANEMIA'. No uses comillas, no agregues explicaciones, ni saludos, ni otro texto."
-                        },
-                        {
-                            "inline_data": {
-                                "mime_type": "image/jpeg",
-                                "data": image_data
-                            }
+            "contents": [{
+                "parts": [
+                    {
+                        "text": "Eres un asistente de apoyo medico. Analiza esta imagen de un ojo humano, enfocandote especificamente en la conjuntiva palpebral inferior. Indica el nivel de probabilidad de anemia basado en la palidez observada. Responde UNICAMENTE con una de estas tres frases exactas: 'ALTA PROBABILIDAD', 'LEVE PROBABILIDAD', o 'BAJA PROBABILIDAD'. No uses comillas, no agregues explicaciones, ni saludos, ni otro texto."
+                    },
+                    {
+                        "inline_data": {
+                            "mime_type": "image/jpeg",
+                            "data": image_data
                         }
-                    ]
-                }
-            ]
+                    }
+                ]
+            }]
         }
         
         response = requests.post(url, json=payload, timeout=8)
@@ -74,21 +106,18 @@ def consultar_gemini(ruta_imagen):
         data = response.json()
         texto = data["candidates"][0]["content"]["parts"][0]["text"].strip().upper()
         
-        if "ANEMIA DETECTADA" in texto:
-            return "ANEMIA DETECTADA"
-        elif "SIN ANEMIA" in texto:
-            return "SIN ANEMIA"
+        if "ALTA" in texto:
+            return "ALTA"
+        elif "BAJA" in texto:
+            return "BAJA"
         else:
-            return "POSIBLE ANEMIA"
+            return "LEVE"
             
     except Exception as e:
-        print(f"[Gemini] Error o sin respuesta (se usa solo el modelo local): {e}")
+        print(f"[Gemini] Error: {e}")
         return None
 
 
-# ============================================================
-# VALIDACION DE CALIDAD DE IMAGEN
-# ============================================================
 def validar_calidad_imagen(ruta_imagen):
     img = cv2.imread(ruta_imagen)
     if img is None:
@@ -357,7 +386,6 @@ def home():
             </div>
         </section>
 
-        <!-- Modal 1: Advertencia medica -->
         <div class="overlay" id="modalWarning">
             <div class="modal">
                 <div class="warning-icon">
@@ -379,7 +407,6 @@ def home():
             </div>
         </div>
 
-        <!-- Modal 2: Como funciona -->
         <div class="overlay" id="modalHow">
             <div class="modal">
                 <button class="modal-close" onclick="closeModal('modalHow')">&times;</button>
@@ -418,7 +445,6 @@ def home():
             </div>
         </div>
 
-        <!-- Modal 3: Seleccion de metodo -->
         <div class="overlay" id="modalDetector">
             <div class="modal">
                 <button class="modal-close" onclick="closeModal('modalDetector')">&times;</button>
@@ -459,7 +485,6 @@ def home():
             </div>
         </div>
 
-        <!-- Modal 4: Camara guiada -->
         <div class="overlay" id="modalCamera">
             <div class="modal">
                 <button class="modal-close" onclick="cerrarCamara()">&times;</button>
@@ -609,8 +634,8 @@ def home():
                     } else {
                         let cls = 'normal';
                         let etiqueta = data.result;
-                        if (data.result.includes('POSIBLE')) cls = 'posible';
-                        else if (data.result.includes('ANEMIA DETECTADA')) cls = 'anemia';
+                        if (data.result.includes('ALTA')) cls = 'anemia';
+                        else if (data.result.includes('LEVE')) cls = 'posible';
                         
                         showResult(`
                             <div class="result-label">Resultado del analisis</div>
@@ -639,7 +664,7 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     if not model:
-        return jsonify({'error': 'Modelo no disponible. Entrena primero con train_model.py'}), 500
+        return jsonify({'error': 'Modelo no disponible'}), 500
 
     if 'image' not in request.files:
         return jsonify({'error': 'No se subio ningun archivo'}), 400
@@ -652,39 +677,38 @@ def predict():
     file.save(temp_path)
 
     try:
-        # 1. Validar calidad
         ok, mensaje = validar_calidad_imagen(temp_path)
         if not ok:
             os.remove(temp_path)
             return jsonify({'error': mensaje}), 400
 
-        # 2. Preprocesar y predecir con el modelo local (EL PROTAGONISTA)
+        ok_ojo, mensaje_ojo = validar_imagen_es_ojo(temp_path)
+        if not ok_ojo:
+            os.remove(temp_path)
+            return jsonify({'error': mensaje_ojo}), 400
+
         img = image.load_img(temp_path, target_size=(224, 224))
         img_array = image.img_to_array(img) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
 
         prediction = float(model.predict(img_array)[0][0])
 
-        # 3. Lógica de decisión híbrida
-        if 0.5 < prediction <= 0.7:
-            # Zona gris: consultamos a Gemini como segunda opinión
+        if prediction > 0.7:
+            result = "ALTA PROBABILIDAD DE ANEMIA"
+        elif prediction > 0.5:
             gemini_opinion = consultar_gemini(temp_path)
             
-            if gemini_opinion == "ANEMIA DETECTADA":
-                result = "POSIBLE ANEMIA (Refuerzo: IA externa sugiere consultar médico)"
-            elif gemini_opinion == "SIN ANEMIA":
-                result = "SIN ANEMIA (Refuerzo: IA externa no detecta signos claros)"
+            if gemini_opinion == "ALTA":
+                result = "LEVE PROBABILIDAD DE ANEMIA (Se recomienda consulta medica)"
+            elif gemini_opinion == "BAJA":
+                result = "LEVE PROBABILIDAD DE ANEMIA"
             else:
-                result = "POSIBLE ANEMIA (Consulta médica recomendada)"
-        elif prediction > 0.7:
-            result = "ANEMIA DETECTADA"
+                result = "LEVE PROBABILIDAD DE ANEMIA"
         else:
-            result = "SIN ANEMIA"
+            result = "BAJA PROBABILIDAD DE ANEMIA"
 
-        # 4. Limpiar archivo temporal
         os.remove(temp_path)
 
-        # 5. Calcular confianza para la UI
         if prediction > 0.5:
             confidence = prediction * 100
         else:
