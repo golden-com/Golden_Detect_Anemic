@@ -1,10 +1,9 @@
 # src/web_app.py
 from flask import Flask, request, jsonify, render_template_string
-import numpy as np
-import cv2
 import os
 import requests
 import base64
+import numpy as np
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
@@ -36,13 +35,13 @@ def validar_imagen_es_ojo(ruta_imagen):
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         return True, "OK"
-    
+
     try:
         with open(ruta_imagen, "rb") as f:
             image_data = base64.b64encode(f.read()).decode('utf-8')
-        
+
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-        
+
         payload = {
             "contents": [{
                 "parts": [
@@ -58,17 +57,17 @@ def validar_imagen_es_ojo(ruta_imagen):
                 ]
             }]
         }
-        
+
         response = requests.post(url, json=payload, timeout=8)
         response.raise_for_status()
         data = response.json()
         texto = data["candidates"][0]["content"]["parts"][0]["text"].strip().upper()
-        
+
         if "NO" in texto:
             return False, "LA IMAGEN BRINDADA NO CONTIENE LA CONJUNTIVA PALPEBRAL REQUERIDA. Por favor, toma una foto clara del ojo donde se vea la parte interna del parpado inferior (conjuntiva). La foto debe estar enfocada, con buena iluminacion y mostrar claramente el ojo."
         else:
             return True, "OK"
-            
+
     except Exception as e:
         print(f"[Validacion ojo] Error: {e}")
         return True, "OK"
@@ -78,13 +77,13 @@ def consultar_gemini(ruta_imagen):
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         return None
-    
+
     try:
         with open(ruta_imagen, "rb") as f:
             image_data = base64.b64encode(f.read()).decode('utf-8')
-        
+
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-        
+
         payload = {
             "contents": [{
                 "parts": [
@@ -100,43 +99,22 @@ def consultar_gemini(ruta_imagen):
                 ]
             }]
         }
-        
+
         response = requests.post(url, json=payload, timeout=8)
         response.raise_for_status()
         data = response.json()
         texto = data["candidates"][0]["content"]["parts"][0]["text"].strip().upper()
-        
+
         if "ALTA" in texto:
             return "ALTA"
         elif "BAJA" in texto:
             return "BAJA"
         else:
             return "LEVE"
-            
+
     except Exception as e:
         print(f"[Gemini] Error: {e}")
         return None
-
-
-def validar_calidad_imagen(ruta_imagen):
-    img = cv2.imread(ruta_imagen)
-    if img is None:
-        return False, "No se pudo leer la imagen."
-
-    gris = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    brillo = float(np.mean(gris))
-    nitidez = float(cv2.Laplacian(gris, cv2.CV_64F).var())
-
-    print(f"[calidad] brillo={brillo:.1f}  nitidez={nitidez:.1f}")
-
-    if brillo < 40:
-        return False, "La imagen esta demasiado oscura. Mejora la iluminacion e intenta de nuevo."
-    if brillo > 235:
-        return False, "La imagen tiene demasiado brillo o reflejo. Evita luz directa muy fuerte."
-    if nitidez < 20:
-        return False, "La fotografia parece borrosa. Manten la camara firme y enfocada."
-
-    return True, "OK"
 
 
 @app.route('/')
@@ -421,7 +399,7 @@ def home():
                     <div class="step-card">
                         <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>
                         <h3>2. Verificacion</h3>
-                        <p>Se comprueba brillo y nitidez minimos de la foto.</p>
+                        <p>Gemini comprueba que sea un ojo con conjuntiva visible.</p>
                     </div>
                     <div class="step-card">
                         <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></div>
@@ -431,7 +409,7 @@ def home():
                     <div class="step-card">
                         <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></div>
                         <h3>4. Inteligencia artificial</h3>
-                        <p>Un modelo entrenado analiza la imagen recibida.</p>
+                        <p>El modelo entrenado analiza la imagen recibida.</p>
                     </div>
                     <div class="step-card">
                         <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
@@ -622,7 +600,7 @@ def home():
             async function enviarImagen(blob, resultId) {
                 const resultDiv = document.getElementById(resultId);
                 resultDiv.className = 'result show';
-                resultDiv.innerHTML = "Verificando calidad de la imagen...";
+                resultDiv.innerHTML = "Verificando que la imagen sea valida...";
                 const formData = new FormData();
                 formData.append('image', blob, 'imagen.jpg');
                 resultDiv.innerHTML = "Analizando mediante inteligencia artificial...";
@@ -636,7 +614,7 @@ def home():
                         let etiqueta = data.result;
                         if (data.result.includes('ALTA')) cls = 'anemia';
                         else if (data.result.includes('LEVE')) cls = 'posible';
-                        
+
                         showResult(`
                             <div class="result-label">Resultado del analisis</div>
                             <div class="result-value">${etiqueta}</div>
@@ -677,11 +655,8 @@ def predict():
     file.save(temp_path)
 
     try:
-        ok, mensaje = validar_calidad_imagen(temp_path)
-        if not ok:
-            os.remove(temp_path)
-            return jsonify({'error': mensaje}), 400
-
+        # Unica validacion previa: Gemini confirma si es un ojo con conjuntiva visible.
+        # Se elimino el filtro de brillo/nitidez con OpenCV porque generaba falsos rechazos.
         ok_ojo, mensaje_ojo = validar_imagen_es_ojo(temp_path)
         if not ok_ojo:
             os.remove(temp_path)
@@ -697,7 +672,7 @@ def predict():
             result = "ALTA PROBABILIDAD DE ANEMIA"
         elif prediction > 0.5:
             gemini_opinion = consultar_gemini(temp_path)
-            
+
             if gemini_opinion == "ALTA":
                 result = "LEVE PROBABILIDAD DE ANEMIA (Se recomienda consulta medica)"
             elif gemini_opinion == "BAJA":
