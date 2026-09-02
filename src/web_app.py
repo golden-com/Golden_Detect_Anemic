@@ -160,7 +160,7 @@ def home():
                 padding: 20px 40px;
             }
             .brand { display: flex; align-items: center; gap: 10px; }
-            .brand svg { width: 28px; height: 28px; }
+            .brand img { width: 28px; height: 28px; object-fit: contain; }
             .brand-name { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; letter-spacing: -0.01em; }
             .brand-name span { color: var(--accent); }
             .nav-cta {
@@ -173,7 +173,7 @@ def home():
                 position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center;
                 padding: 40px 20px 70px; min-height: calc(100vh - 90px); justify-content: center;
             }
-            .hero-icon svg { width: 54px; height: 72px; opacity: 0.7; margin-bottom: 26px; }
+            .hero-icon img { max-height: 72px; max-width: 140px; object-fit: contain; margin-bottom: 26px; }
             .hero h1 {
                 font-family: 'Fraunces', serif; font-weight: 500; letter-spacing: -0.01em;
                 font-size: clamp(2rem, 4.5vw, 3rem); line-height: 1.15; max-width: 680px; margin: 0 0 20px;
@@ -316,10 +316,7 @@ def home():
     <body>
         <nav class="navbar">
             <div class="brand">
-                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 5C20 5 10 15 10 25C10 30.523 14.477 35 20 35C25.523 35 30 30.523 30 25C30 15 20 5 20 5Z" stroke="#9C3B2E" stroke-width="1.5" fill="none" opacity="0.8"/>
-                    <path d="M20 12C20 12 15 18 15 24C15 26.761 17.239 29 20 29C22.761 29 25 26.761 25 24C25 18 20 12 20 12Z" stroke="#9C3B2E" stroke-width="1" fill="none" opacity="0.5"/>
-                </svg>
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo Golden Detect Anemic">
                 <div class="brand-name">Golden Detect <span>Anemic</span></div>
             </div>
             <button class="nav-cta" onclick="openModal('modalWarning')">Iniciar analisis</button>
@@ -327,11 +324,7 @@ def home():
 
         <section class="hero">
             <div class="hero-icon">
-                <svg viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M30 5C30 5 10 20 10 40C10 55 19 68 30 75C41 68 50 55 50 40C50 20 30 5 30 5Z" stroke="#9C3B2E" stroke-width="1.5" fill="none" opacity="0.6"/>
-                    <path d="M30 15C30 15 18 25 18 40C18 50 23 60 30 65C37 60 42 50 42 40C42 25 30 15 30 15Z" stroke="#9C3B2E" stroke-width="1" fill="none" opacity="0.35"/>
-                    <path d="M30 25C30 25 24 32 24 40C24 45 26 50 30 53C34 50 36 45 36 40C36 32 30 25 30 25Z" stroke="#9C3B2E" stroke-width="0.8" fill="none" opacity="0.22"/>
-                </svg>
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo Golden Detect Anemic">
             </div>
             <h1>Evaluacion preliminar de anemia mediante inteligencia artificial</h1>
             <p class="hero-subtitle">Una fotografia de la conjuntiva palpebral inferior, analizada en segundos</p>
