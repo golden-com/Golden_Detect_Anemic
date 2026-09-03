@@ -1,4 +1,3 @@
-# src/web_app.py
 from flask import Flask, request, jsonify, render_template_string
 import os
 import requests
@@ -352,7 +351,7 @@ def home():
                 </div>
             </div>
             <div class="credit">
-                <div class="credit-eureka">Eureka 2026 &middot; Proyecto de investigacion escolar</div>
+                <div class="credit-eureka">Proyecto de solucion tecnologica</div>
                 <div class="credit-inst">Institucion Educativa "Victor Manuel Maurtua" &middot; Parcona, Ica</div>
             </div>
         </section>
@@ -647,8 +646,6 @@ def predict():
     file.save(temp_path)
 
     try:
-        # Unica validacion previa: Gemini confirma si es un ojo con conjuntiva visible.
-        # Se elimino el filtro de brillo/nitidez con OpenCV porque generaba falsos rechazos.
         ok_ojo, mensaje_ojo = validar_imagen_es_ojo(temp_path)
         if not ok_ojo:
             os.remove(temp_path)
