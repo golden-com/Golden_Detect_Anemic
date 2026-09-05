@@ -198,340 +198,657 @@ PAGINA_PRINCIPAL = """
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Golden Detect Anemic</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
-body{background:linear-gradient(135deg,#fef3f2 0%,#fee2e2 100%);min-height:100vh;color:#1f2937}
-.container{max-width:1100px;margin:0 auto;padding:20px}
-header{text-align:center;padding:30px 0}
-header h1{font-size:2.5rem;color:#b91c1c;margin-bottom:10px}
-header p{color:#6b7280;font-size:1.1rem}
-.hero{text-align:center;padding:40px 20px;background:white;border-radius:20px;box-shadow:0 10px 30px rgba(185,28,28,0.1);margin:20px 0}
-.hero h2{font-size:2rem;color:#991b1b;margin-bottom:15px}
-.hero p{color:#4b5563;margin-bottom:25px;font-size:1.05rem;line-height:1.6}
-.btn{display:inline-block;padding:14px 32px;border-radius:50px;font-weight:600;text-decoration:none;cursor:pointer;border:none;font-size:1rem;transition:all 0.3s}
-.btn-primary{background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;box-shadow:0 4px 15px rgba(220,38,38,0.3)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(220,38,38,0.4)}
-.btn-secondary{background:white;color:#b91c1c;border:2px solid #b91c1c}
-.btn-secondary:hover{background:#b91c1c;color:white}
-.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;margin:30px 0}
-.feature{background:white;padding:25px;border-radius:15px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.05)}
-.feature-icon{font-size:2.5rem;margin-bottom:10px;color:#dc2626;font-weight:bold}
-.feature h3{color:#991b1b;margin-bottom:8px}
-.feature p{color:#6b7280;font-size:0.95rem}
-.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center}
-.modal-overlay.active{display:flex}
-.modal{background:white;border-radius:20px;padding:30px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto;position:relative}
-.modal h3{color:#991b1b;margin-bottom:15px}
-.modal-close{position:absolute;top:15px;right:15px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:#6b7280}
-.upload-area{border:2px dashed #dc2626;border-radius:15px;padding:40px;text-align:center;cursor:pointer;transition:all 0.3s;background:#fef2f2}
-.upload-area:hover{background:#fee2e2}
-.upload-area.dragover{background:#fecaca;border-color:#991b1b}
-.upload-area p{color:#6b7280;margin:10px 0}
-.upload-icon{font-size:3rem;color:#dc2626;margin-bottom:10px}
-#fileInput{display:none}
-.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:20px}
-.option-card{background:#fef2f2;border:2px solid #fecaca;border-radius:15px;padding:20px;text-align:center;cursor:pointer;transition:all 0.3s}
-.option-card:hover{border-color:#dc2626;background:#fee2e2;transform:translateY(-2px)}
-.option-card h4{color:#991b1b;margin-bottom:8px}
-.option-card p{color:#6b7280;font-size:0.9rem}
-.option-icon{font-size:2.5rem;margin-bottom:10px;color:#dc2626;font-weight:bold}
-.qr-section{text-align:center;padding:20px}
-#qrCode{background:white;padding:15px;border-radius:15px;display:inline-block;margin:15px 0;box-shadow:0 4px 15px rgba(0,0,0,0.1)}
-#qrCode img{width:250px;height:250px}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin:20px 0}
-.step{background:white;padding:20px;border-radius:12px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
-.step-num{background:#dc2626;color:white;width:35px;height:35px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;margin-bottom:10px}
-.step h4{color:#991b1b;margin-bottom:5px;font-size:0.95rem}
-.step p{color:#6b7280;font-size:0.85rem}
-.warning-box{background:#fef3c7;border-left:4px solid #f59e0b;padding:15px;border-radius:8px;margin:20px 0;color:#78350f}
-footer{text-align:center;padding:20px;color:#6b7280;font-size:0.9rem}
-.loading{display:none;text-align:center;padding:30px}
-.loading.active{display:block}
-.spinner{border:4px solid #fecaca;border-top:4px solid #dc2626;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin:0 auto 15px}
-@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-.result-box{background:white;border-radius:15px;padding:25px;margin:20px 0;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:none}
-.result-box.active{display:block}
-.result-alta{border-left:5px solid #dc2626}
-.result-leve{border-left:5px solid #f59e0b}
-.result-baja{border-left:5px solid #10b981}
-.confidence-bar{background:#e5e7eb;height:10px;border-radius:5px;overflow:hidden;margin:10px 0}
-.confidence-fill{height:100%;background:linear-gradient(90deg,#10b981,#f59e0b,#dc2626);transition:width 0.5s}
-@media(max-width:768px){
-.hero h2{font-size:1.5rem}
-.options-grid{grid-template-columns:1fr}
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Golden Detect Anemic</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #EEF1EE; --panel: #FFFFFF; --panel-2: #F4F6F3; --text: #1C2321;
+            --text-soft: #52605B; --text-faint: #7C877F; --accent: #9C3B2E;
+            --accent-strong: #832F24; --accent-soft: rgba(156, 59, 46, 0.10);
+            --teal: #1F6F6B; --teal-soft: rgba(31, 111, 107, 0.10);
+            --amber: #96690F; --amber-soft: rgba(150, 105, 15, 0.10);
+            --border: #D9DCD5;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body {
+            font-family: 'Work Sans', sans-serif; background: var(--bg); color: var(--text);
+            min-height: 100vh; overflow-x: hidden; line-height: 1.55;
+        }
+        body.no-scroll { overflow: hidden; }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image: linear-gradient(rgba(210,84,63,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(210,84,63,0.035) 1px, transparent 1px);
+            background-size: 56px 56px; pointer-events: none; z-index: 0;
+        }
+        body::after {
+            content: ''; position: fixed; top: -15%; left: 50%; transform: translateX(-50%);
+            width: 900px; height: 700px;
+            background: radial-gradient(circle, rgba(210,84,63,0.10) 0%, transparent 70%);
+            pointer-events: none; z-index: 0;
+        }
+        .navbar {
+            position: relative; z-index: 5; display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 40px;
+        }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand img { width: 42px; height: 42px; object-fit: contain; }
+        .brand-name { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; letter-spacing: -0.01em; }
+        .brand-name span { color: var(--accent); }
+        .nav-cta {
+            font-family: 'Work Sans', sans-serif; font-weight: 600; font-size: 0.85rem;
+            padding: 10px 22px; background: var(--accent); color: #FBF6F2;
+            border: none; border-radius: 24px; cursor: pointer; transition: background .2s ease, transform .2s ease;
+        }
+        .nav-cta:hover { background: var(--accent-strong); transform: translateY(-1px); }
+        .hero {
+            position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center;
+            padding: 40px 20px 70px; min-height: calc(100vh - 90px); justify-content: center;
+        }
+        .hero-icon img { max-height: 72px; max-width: 140px; object-fit: contain; margin-bottom: 26px; }
+        .hero h1 {
+            font-family: 'Fraunces', serif; font-weight: 500; letter-spacing: -0.01em;
+            font-size: clamp(2rem, 4.5vw, 3rem); line-height: 1.15; max-width: 680px; margin: 0 0 20px;
+        }
+        .hero-subtitle { font-size: 1rem; color: var(--text-soft); margin: 0 0 14px; }
+        .hero-description { font-size: 0.92rem; color: var(--text-faint); max-width: 520px; margin: 0 0 36px; }
+        .hero-actions { display: flex; align-items: center; gap: 22px; margin-bottom: 40px; flex-wrap: wrap; justify-content: center; }
+        .btn-primary {
+            font-family: 'Work Sans', sans-serif; font-weight: 600; font-size: 0.95rem;
+            padding: 14px 32px; background: var(--accent); color: #FBF6F2; border: none;
+            border-radius: 30px; cursor: pointer; transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+        }
+        .btn-primary:hover { background: var(--accent-strong); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(210,84,63,0.28); }
+        .btn-text { color: var(--text-soft); text-decoration: none; font-size: 0.9rem; background: none; border: none; cursor: pointer; font-family: 'Work Sans', sans-serif; }
+        .btn-text:hover { color: var(--text); }
+        .trust-badges { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; justify-content: center; margin-bottom: 44px; }
+        .trust-badge { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--text-faint); }
+        .trust-badge svg { width: 14px; height: 14px; color: var(--teal); }
+        .credit { text-align: center; }
+        .credit-eureka { display: inline-block; font-family: 'Fraunces', serif; font-size: 0.85rem; color: var(--accent); border: 1px solid var(--border); padding: 6px 16px; border-radius: 20px; margin-bottom: 6px; }
+        .credit-inst { font-size: 0.75rem; color: var(--text-faint); }
+        .overlay {
+            position: fixed; inset: 0; z-index: 50; background: rgba(10, 8, 6, 0.72);
+            display: none; align-items: center; justify-content: center; padding: 24px;
+        }
+        .overlay.open { display: flex; }
+        .modal {
+            position: relative; background: var(--panel); border: 1px solid var(--border);
+            border-radius: 18px; box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+            width: 100%; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-close {
+            position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(28,35,33,0.05); border: 1px solid var(--border);
+            color: var(--text-soft); font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; z-index: 2;
+        }
+        .modal-close:hover { color: var(--text); background: rgba(28,35,33,0.10); }
+        .modal-back {
+            background: none; border: none; color: var(--text-soft); font-size: 0.82rem;
+            cursor: pointer; padding: 0; margin-bottom: 18px; font-family: 'Work Sans', sans-serif;
+        }
+        .modal-back:hover { color: var(--text); }
+        #modalWarning .modal { max-width: 480px; padding: 44px 40px; text-align: center; }
+        .warning-icon { margin-bottom: 22px; }
+        .warning-icon svg { width: 52px; height: 52px; }
+        #modalWarning h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.4rem; margin: 0 0 22px; line-height: 1.3; }
+        .duration-badge {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 9px 18px; border: 1px solid rgba(63,175,166,0.35); border-radius: 30px;
+            font-size: 0.78rem; color: var(--teal); background: var(--teal-soft); margin-bottom: 24px;
+        }
+        .duration-badge svg { width: 14px; height: 14px; }
+        .modal-text { font-size: 0.88rem; color: var(--text-soft); margin: 0 0 14px; }
+        .modal-text strong { color: var(--text); }
+        #modalHow .modal { max-width: 1000px; padding: 48px 44px; }
+        @media (max-width: 600px) {
+            #modalWarning .modal, #modalHow .modal, #modalDetector .modal, #modalQR .modal { padding: 28px 20px; }
+        }
+        #modalHow h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.6rem; text-align: center; margin: 0 0 8px; }
+        #modalHow .modal-sub { text-align: center; color: var(--text-faint); font-size: 0.88rem; margin: 0 0 36px; }
+        .steps-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 36px; }
+        @media (max-width: 900px) { .steps-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 480px) { .steps-grid { grid-template-columns: 1fr; } }
+        .step-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px; padding: 22px 18px; text-align: left; }
+        .step-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+        .step-icon svg { width: 18px; height: 18px; color: var(--accent); }
+        .step-card h3 { font-size: 0.85rem; font-weight: 600; margin: 0 0 8px; }
+        .step-card p { font-size: 0.78rem; color: var(--text-faint); margin: 0; line-height: 1.6; }
+        #modalHow .cta-row { text-align: center; }
+        #modalDetector .modal { max-width: 640px; padding: 44px 40px; }
+        #modalDetector h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.4rem; text-align: center; margin: 0 0 6px; }
+        #modalDetector .modal-sub { text-align: center; color: var(--text-faint); font-size: 0.85rem; margin: 0 0 30px; }
+        .option-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        @media (max-width: 640px) { .option-grid { grid-template-columns: 1fr; } }
+        .option-card {
+            background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px;
+            padding: 26px 20px; text-align: left; cursor: pointer;
+            font-family: 'Work Sans', sans-serif; color: var(--text);
+            transition: border-color .2s ease, background .2s ease;
+        }
+        .option-card:hover { border-color: var(--accent); background: rgba(210,84,63,0.06); }
+        .option-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+        .option-icon svg { width: 20px; height: 20px; color: var(--accent); }
+        .option-card h3 { font-size: 0.95rem; font-weight: 600; margin: 0 0 6px; }
+        .option-card p { font-size: 0.78rem; color: var(--text-faint); margin: 0; line-height: 1.5; }
+        @media (max-width: 767px) { .solo-pc { display: none; } }
+        @media (min-width: 768px) { .solo-movil { display: none; } }
+        .upload-box {
+            border: 1.5px dashed var(--border); border-radius: 12px; padding: 30px 20px;
+            text-align: center; cursor: pointer; transition: border-color .2s ease;
+        }
+        .upload-box:hover { border-color: var(--accent); }
+        .upload-box p { font-size: 0.85rem; color: var(--text-soft); margin: 0 0 4px; }
+        .upload-box span { font-size: 0.75rem; color: var(--text-faint); }
+        .mini-disclaimer { font-size: 0.75rem; color: var(--text-faint); border-left: 2px solid var(--border); padding-left: 12px; margin: 18px 0; }
+        #previewUpload { max-width: 100%; max-height: 220px; border-radius: 10px; margin: 16px auto 0; display: none; }
+        #modalCamera .modal { max-width: 500px; width: 92vw; padding: 30px 26px; }
+        #modalCamera h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.3rem; text-align: center; margin: 0 0 6px; }
+        #modalCamera .modal-sub { text-align: center; color: var(--text-faint); font-size: 0.82rem; margin: 0 0 20px; }
+        .camera-card { background: #0D0B09; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+        .camera-wrap { position: relative; width: 100%; aspect-ratio: 3/4; background: #0a0908; overflow: hidden; }
+        video, #captureCanvas { width: 100%; height: 100%; object-fit: cover; display: block; }
+        #captureCanvas { display: none; }
+        .camera-controls { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .camera-controls-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        button.ctrl {
+            font-family: 'Work Sans', sans-serif; font-size: 0.84rem; font-weight: 500;
+            padding: 10px 18px; border: 1px solid transparent; border-radius: 24px; cursor: pointer;
+            transition: background .15s ease, border-color .15s ease;
+        }
+        .ctrl.solid { background: var(--accent); color: #FBF6F2; }
+        .ctrl.solid:hover { background: var(--accent-strong); }
+        .ctrl.outline { background: transparent; color: var(--text); border-color: rgba(245,240,232,0.25); }
+        .ctrl.outline:hover:not(:disabled) { border-color: var(--text); }
+        .ctrl.outline:disabled { color: rgba(245,240,232,0.3); cursor: not-allowed; }
+        .ctrl.ghost { background: transparent; color: var(--text-soft); border-color: var(--border); }
+        .ctrl.ghost:hover { border-color: var(--text-soft); }
+        .zoom-row { display: flex; gap: 8px; padding: 0 16px 14px; flex-wrap: wrap; }
+        .zoom-btn {
+            font-family: 'Work Sans', sans-serif; font-size: 0.78rem; font-weight: 600;
+            padding: 6px 14px; border-radius: 16px; border: 1px solid rgba(245,240,232,0.25);
+            background: transparent; color: #F5F0E8; cursor: pointer;
+        }
+        .zoom-btn:hover { border-color: #F5F0E8; }
+        .result { margin-top: 16px; padding: 18px 20px; border-radius: 10px; font-size: 0.9rem; display: none; }
+        .result.show { display: block; }
+        .result-label { font-size: 0.72rem; color: var(--text-faint); margin-bottom: 3px; }
+        .result-value { font-family: 'Fraunces', serif; font-size: 1.25rem; font-weight: 500; margin-bottom: 10px; }
+        .confidence-row { font-size: 0.82rem; color: var(--text-soft); margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .confidence-bar { height: 8px; background: rgba(0,0,0,0.08); border-radius: 5px; overflow: hidden; margin-bottom: 10px; }
+        .confidence-fill { height: 100%; border-radius: 5px; transition: width .5s ease; }
+        .result.anemia { background: var(--accent-soft); }
+        .result.anemia .result-value { color: var(--accent-strong); }
+        .result.anemia .confidence-fill { background: var(--accent-strong); }
+        .result.posible { background: var(--amber-soft); }
+        .result.posible .result-value { color: var(--amber); }
+        .result.posible .confidence-fill { background: var(--amber); }
+        .result.normal { background: var(--teal-soft); }
+        .result.normal .result-value { color: var(--teal); }
+        .result.normal .confidence-fill { background: var(--teal); }
+        .result.error { background: var(--panel-2); border: 1px solid var(--border); color: var(--text-soft); }
+        .result .disclaimer { font-size: 0.74rem; color: var(--text-faint); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+        #modalQR .modal { max-width: 460px; padding: 40px 36px; text-align: center; }
+        .qr-box { background: #FFFFFF; border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: inline-block; margin: 10px 0 18px; }
+        #qrCanvasWrap { width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; }
+        .qr-estado { font-size: 0.85rem; color: var(--text-soft); margin-bottom: 6px; }
+        .qr-spinner {
+            width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent);
+            border-radius: 50%; display: inline-block; margin-right: 8px; vertical-align: middle;
+            animation: girar 0.8s linear infinite;
+        }
+        @keyframes girar { to { transform: rotate(360deg); } }
+        .qr-link { font-size: 0.72rem; color: var(--text-faint); word-break: break-all; margin-top: 10px; }
+    </style>
 </head>
 <body>
-<div class="container">
-<header>
-<h1>Golden Detect Anemic</h1>
-<p>Evaluacion preliminar de anemia mediante inteligencia artificial</p>
-</header>
+    <nav class="navbar">
+        <div class="brand">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo Golden Detect Anemic">
+            <div class="brand-name">Golden Detect <span>Anemic</span></div>
+        </div>
+        <button class="nav-cta" onclick="openModal('modalWarning')">Iniciar analisis</button>
+    </nav>
 
-<div class="hero">
-<h2>Una fotografia de la conjuntiva palpebral inferior, analizada en segundos</h2>
-<p>Golden Detect Anemic utiliza un modelo de inteligencia artificial entrenado para ofrecer una orientacion preliminar sobre posibles signos de anemia. <strong>No reemplaza un examen medico ni un analisis de sangre.</strong></p>
-<button class="btn btn-primary" onclick="mostrarOpciones()">Iniciar mi analisis</button>
-<button class="btn btn-secondary" onclick="mostrarPasos()" style="margin-left:10px">Descubre como funciona</button>
-</div>
+    <section class="hero">
+        <div class="hero-icon">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo Golden Detect Anemic">
+        </div>
+        <h1>Evaluacion preliminar de anemia mediante inteligencia artificial</h1>
+        <p class="hero-subtitle">Una fotografia de la conjuntiva palpebral inferior, analizada en segundos</p>
+        <p class="hero-description">
+            Golden Detect Anemic utiliza un modelo de inteligencia artificial entrenado para
+            ofrecer una orientacion preliminar sobre posibles signos de anemia. No reemplaza
+            un examen medico ni un analisis de sangre.
+        </p>
+        <div class="hero-actions">
+            <button class="btn-primary" onclick="openModal('modalWarning')">Iniciar mi analisis</button>
+            <button class="btn-text" onclick="openModal('modalHow')">Descubre como funciona &darr;</button>
+        </div>
+        <div class="trust-badges">
+            <div class="trust-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Evaluacion preliminar, no diagnostica
+            </div>
+            <div class="trust-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Resultado en segundos
+            </div>
+            <div class="trust-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                Sin costo, uso educativo
+            </div>
+        </div>
+        <div class="credit">
+            <div class="credit-eureka">Proyecto de solucion tecnologica</div>
+            <div class="credit-inst">Institucion Educativa "Victor Manuel Maurtua" &middot; Parcona, Ica</div>
+        </div>
+    </section>
 
-<div class="features">
-<div class="feature">
-<div class="feature-icon">01</div>
-<h3>Evaluacion preliminar</h3>
-<p>No diagnostica, solo orienta</p>
-</div>
-<div class="feature">
-<div class="feature-icon">02</div>
-<h3>Resultado en segundos</h3>
-<p>Analisis rapido con IA</p>
-</div>
-<div class="feature">
-<div class="feature-icon">03</div>
-<h3>Sin costo</h3>
-<p>Uso educativo gratuito</p>
-</div>
-</div>
+    <div class="overlay" id="modalWarning">
+        <div class="modal">
+            <div class="warning-icon">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M32 8L4 56H60L32 8Z" fill="#D9A54B" opacity="0.9"/>
+                    <path d="M32 8L4 56H60L32 8Z" stroke="#D9A54B" stroke-width="2" fill="none"/>
+                    <text x="32" y="46" text-anchor="middle" font-size="28" font-weight="800" fill="#17120F" font-family="Work Sans, sans-serif">!</text>
+                </svg>
+            </div>
+            <h2>Advertencia medica previa</h2>
+            <div class="duration-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Captura y analisis: menos de un minuto
+            </div>
+            <p class="modal-text">Golden Detect Anemic es una herramienta <strong>unicamente informativa.</strong></p>
+            <p class="modal-text"><strong>Los resultados generados por la IA NO CONSTITUYEN UN DIAGNOSTICO MEDICO.</strong></p>
+            <p class="modal-text">En caso de duda o sospecha de anemia, <strong>consulte a un profesional de la salud.</strong></p>
+            <button class="btn-primary" onclick="closeModal('modalWarning'); openModal('modalHow');">Entiendo, continuar</button>
+        </div>
+    </div>
 
-<div class="warning-box">
-<strong>Advertencia medica:</strong> Golden Detect Anemic es una herramienta unicamente informativa. Los resultados generados por la IA NO CONSTITUYEN UN DIAGNOSTICO MEDICO. En caso de duda o sospecha de anemia, consulte a un profesional de la salud.
-</div>
+    <div class="overlay" id="modalHow">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('modalHow')">&times;</button>
+            <h2>Como funciona el analisis</h2>
+            <p class="modal-sub">Cinco pasos, sin cita previa, disponible cuando lo necesites.</p>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3"/></svg></div>
+                    <h3>1. Captura</h3>
+                    <p>Subes una foto, la tomas desde tu celular, o desde la computadora usas un QR para tomarla con tu telefono.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>
+                    <h3>2. Verificacion</h3>
+                    <p>El modelo comprueba que sea un ojo humano con conjuntiva visible.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></div>
+                    <h3>3. Procesamiento</h3>
+                    <p>La imagen se ajusta al formato que usa el modelo.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></div>
+                    <h3>4. Inteligencia artificial</h3>
+                    <p>El modelo entrenado analiza la imagen recibida.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></div>
+                    <h3>5. Resultado</h3>
+                    <p>Se muestra la evaluacion preliminar y su confianza.</p>
+                </div>
+            </div>
+            <div class="cta-row">
+                <button class="btn-primary" onclick="closeModal('modalHow'); resetDetectorView(); openModal('modalDetector');">Iniciar mi analisis ahora</button>
+            </div>
+        </div>
+    </div>
 
-<div id="seccionOpciones" style="display:none">
-<div class="hero">
-<h2>Analisis por imagen</h2>
-<p>Elige como quieres proporcionar la fotografia.</p>
-<div class="options-grid">
-<div class="option-card" onclick="mostrarSubir()">
-<div class="option-icon">01</div>
-<h4>Subir archivo</h4>
-<p>Selecciona una foto ya tomada desde tu dispositivo.</p>
-</div>
-<div class="option-card" onclick="generarQR()">
-<div class="option-icon">02</div>
-<h4>Usar mi celular</h4>
-<p>Escanea un QR y toma la foto desde tu telefono.</p>
-</div>
-</div>
-<button class="btn btn-secondary" onclick="ocultarOpciones()" style="margin-top:20px">Volver</button>
-</div>
-</div>
+    <div class="overlay" id="modalDetector">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('modalDetector')">&times;</button>
+            <div id="opcionesSeccion">
+                <h2>Analisis por imagen</h2>
+                <p class="modal-sub">Elige como quieres proporcionar la fotografia.</p>
+                <div class="option-grid">
+                    <button class="option-card" onclick="mostrarSubida()">
+                        <div class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+                        <h3>Subir archivo</h3>
+                        <p>Selecciona una foto ya tomada desde tu dispositivo.</p>
+                    </button>
+                    <button class="option-card solo-movil" onclick="abrirCamara()">
+                        <div class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3"/></svg></div>
+                        <h3>Tomar foto</h3>
+                        <p>Usa la camara de tu celular.</p>
+                    </button>
+                    <button class="option-card solo-pc" onclick="abrirQR()">
+                        <div class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 14h3v3M14 18h3v3M21 21h-3"/></svg></div>
+                        <h3>Usar mi celular</h3>
+                        <p>Escanea un QR y toma la foto desde tu telefono.</p>
+                    </button>
+                </div>
+            </div>
+            <div id="uploadSeccion" style="display:none;">
+                <button class="modal-back" onclick="volverOpciones()">&larr; Volver</button>
+                <h2>Subir archivo</h2>
+                <p class="modal-sub">Elige una foto donde se vea con claridad la conjuntiva palpebral inferior.</p>
+                <ul class="tips">
+                    <li>Usa una foto con buena iluminacion natural</li>
+                    <li>Evita imagenes borrosas o con reflejos</li>
+                    <li>La conjuntiva debe verse claramente, sin recortes</li>
+                </ul>
+                <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+                    <p>Haz clic para seleccionar una imagen</p>
+                    <span>JPG o PNG</span>
+                </div>
+                <input type="file" id="fileInput" accept="image/*" onchange="onFileSelected(event)" hidden>
+                <img id="previewUpload" src="" alt="Vista previa">
+                <p class="mini-disclaimer">Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un analisis de sangre.</p>
+                <div id="resultUpload" class="result"></div>
+            </div>
+        </div>
+    </div>
 
-<div id="seccionSubir" style="display:none">
-<div class="hero">
-<h2>Subir archivo</h2>
-<p>Elige una foto donde se vea con claridad la conjuntiva palpebral inferior.</p>
-<div class="upload-area" id="uploadArea">
-<div class="upload-icon">+</div>
-<p><strong>Haz clic para seleccionar una imagen</strong></p>
-<p>JPG o PNG</p>
-<input type="file" id="fileInput" accept="image/*">
-</div>
-<div class="warning-box" style="margin-top:15px">
-Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un analisis de sangre.
-</div>
-<div class="loading" id="loadingUpload">
-<div class="spinner"></div>
-<p>Analizando imagen...</p>
-</div>
-<div class="result-box" id="resultUpload"></div>
-<button class="btn btn-secondary" onclick="volverOpciones()" style="margin-top:15px">Volver</button>
-</div>
-</div>
+    <div class="overlay" id="modalCamera">
+        <div class="modal">
+            <button class="modal-close" onclick="cerrarCamara()">&times;</button>
+            <button class="modal-back" onclick="cerrarCamara()">&larr; Volver</button>
+            <h2>Captura desde tu celular</h2>
+            <p class="modal-sub">Encuadra el ojo y toma la foto.</p>
+            <div class="camera-card">
+                <div class="camera-wrap">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="captureCanvas"></canvas>
+                </div>
+                <div class="zoom-row" id="zoomButtons"></div>
+                <div class="camera-controls">
+                    <div class="camera-controls-row">
+                        <button class="ctrl solid" id="startBtn" onclick="iniciarCamara()">Activar camara</button>
+                        <button class="ctrl outline" id="switchBtn" onclick="cambiarCamara()" style="display:none;">Cambiar camara</button>
+                    </div>
+                    <div class="camera-controls-row">
+                        <button class="ctrl outline" id="captureBtn" onclick="capturar()" disabled>Capturar y analizar</button>
+                        <button class="ctrl ghost" id="retryBtn" onclick="reiniciarCamara()" style="display:none;">Realizar otro analisis</button>
+                    </div>
+                </div>
+            </div>
+            <div id="resultCamera" class="result"></div>
+        </div>
+    </div>
 
-<div id="seccionQR" style="display:none">
-<div class="hero">
-<h2>Usa tu celular</h2>
-<p>Escanea este codigo con tu telefono para tomar la foto desde ahi.</p>
-<div class="qr-section">
-<div id="qrCode"></div>
-<p id="qrStatus">Esperando captura desde el celular...</p>
-<div class="loading" id="loadingQR">
-<div class="spinner"></div>
-<p>Procesando imagen desde el celular...</p>
-</div>
-<div class="result-box" id="resultQR"></div>
-</div>
-<button class="btn btn-secondary" onclick="volverOpciones()" style="margin-top:15px">Volver</button>
-</div>
-</div>
+    <div class="overlay" id="modalQR">
+        <div class="modal">
+            <button class="modal-close" onclick="cerrarQR()">&times;</button>
+            <h2>Usa tu celular</h2>
+            <p class="modal-sub">Escanea este codigo con tu telefono para tomar la foto desde ahi.</p>
+            <div class="qr-box"><div id="qrCanvasWrap"></div></div>
+            <div class="qr-estado" id="qrEstadoTexto"><span class="qr-spinner"></span>Esperando captura desde el celular...</div>
+            <div class="qr-link" id="qrLinkTexto"></div>
+            <div id="resultQR" class="result"></div>
+        </div>
+    </div>
 
-<div id="seccionPasos" style="display:none">
-<div class="hero">
-<h2>Como funciona el analisis</h2>
-<p>Cinco pasos, sin cita previa, disponible cuando lo necesites.</p>
-<div class="steps">
-<div class="step">
-<div class="step-num">1</div>
-<h4>Captura</h4>
-<p>Subes una foto o usas un QR para tomarla con tu telefono.</p>
-</div>
-<div class="step">
-<div class="step-num">2</div>
-<h4>Verificacion</h4>
-<p>El modelo comprueba que sea un ojo humano con conjuntiva visible.</p>
-</div>
-<div class="step">
-<div class="step-num">3</div>
-<h4>Procesamiento</h4>
-<p>La imagen se ajusta al formato que usa el modelo.</p>
-</div>
-<div class="step">
-<div class="step-num">4</div>
-<h4>Inteligencia artificial</h4>
-<p>El modelo entrenado analiza la imagen recibida.</p>
-</div>
-<div class="step">
-<div class="step-num">5</div>
-<h4>Resultado</h4>
-<p>Se muestra la evaluacion preliminar y su confianza.</p>
-</div>
-</div>
-<button class="btn btn-primary" onclick="mostrarOpciones()">Iniciar mi analisis ahora</button>
-</div>
-</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+            document.body.classList.add('no-scroll');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+            if (!document.querySelector('.overlay.open')) {
+                document.body.classList.remove('no-scroll');
+            }
+        }
+        function resetDetectorView() {
+            document.getElementById('opcionesSeccion').style.display = 'block';
+            document.getElementById('uploadSeccion').style.display = 'none';
+            const resultUpload = document.getElementById('resultUpload');
+            resultUpload.innerHTML = '';
+            resultUpload.className = 'result';
+            document.getElementById('previewUpload').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+        }
+        function mostrarSubida() {
+            document.getElementById('opcionesSeccion').style.display = 'none';
+            document.getElementById('uploadSeccion').style.display = 'block';
+        }
+        function volverOpciones() { resetDetectorView(); }
+        function abrirCamara() {
+            closeModal('modalDetector');
+            reiniciarCamara();
+            openModal('modalCamera');
+        }
+        function cerrarCamara() {
+            detenerCamara();
+            closeModal('modalCamera');
+            resetDetectorView();
+            openModal('modalDetector');
+        }
+        function onFileSelected(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.getElementById('previewUpload');
+                img.src = e.target.result;
+                img.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            enviarImagen(file, 'resultUpload');
+        }
 
-<footer>
-<p>Proyecto de solucion tecnologica · Institucion Educativa "Victor Manuel Maurtua" · Parcona, Ica</p>
-</footer>
-</div>
+        const video = document.getElementById('video');
+        const captureCanvas = document.getElementById('captureCanvas');
+        let stream = null;
+        let facingMode = 'environment';
+        let currentTrack = null;
+        let zoomActual = 1;
+        let zoomEsDigital = false;
 
-<script>
-let sesionId = null;
-let pollingQR = null;
+        async function iniciarCamara() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 960 } }
+                });
+                video.srcObject = stream;
+                currentTrack = stream.getVideoTracks()[0];
+                zoomActual = 1;
+                zoomEsDigital = false;
+                video.style.transform = 'none';
+                actualizarBotonesZoom();
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('switchBtn').style.display = 'inline-block';
+                document.getElementById('captureBtn').disabled = false;
+            } catch (e) {
+                showResult('No se pudo acceder a la camara. Revisa los permisos del navegador.', 'error', 'resultCamera');
+            }
+        }
 
-function mostrarOpciones(){
-document.getElementById('seccionOpciones').style.display='block';
-document.getElementById('seccionSubir').style.display='none';
-document.getElementById('seccionQR').style.display='none';
-document.getElementById('seccionPasos').style.display='none';
-document.querySelector('.hero').style.display='none';
-document.querySelector('.features').style.display='none';
-document.querySelector('.warning-box').style.display='none';
-}
+        async function cambiarCamara() {
+            facingMode = facingMode === 'environment' ? 'user' : 'environment';
+            if (stream) { stream.getTracks().forEach(t => t.stop()); }
+            video.style.transform = 'none';
+            await iniciarCamara();
+        }
 
-function ocultarOpciones(){
-document.getElementById('seccionOpciones').style.display='none';
-document.querySelector('.hero').style.display='block';
-document.querySelector('.features').style.display='block';
-document.querySelector('.warning-box').style.display='block';
-}
+        function actualizarBotonesZoom() {
+            const niveles = facingMode === 'environment' ? [1.5, 2, 3] : [1.5, 2];
+            const cont = document.getElementById('zoomButtons');
+            cont.innerHTML = niveles.map(n => `<button type="button" class="zoom-btn" onclick="aplicarZoom(${n})">${n}x</button>`).join('');
+        }
 
-function volverOpciones(){
-document.getElementById('seccionSubir').style.display='none';
-document.getElementById('seccionQR').style.display='none';
-document.getElementById('seccionOpciones').style.display='block';
-if(pollingQR){clearInterval(pollingQR);pollingQR=null;}
-}
+        async function aplicarZoom(factor) {
+            zoomActual = factor;
+            if (currentTrack && currentTrack.getCapabilities) {
+                const caps = currentTrack.getCapabilities();
+                if (caps.zoom) {
+                    zoomEsDigital = false;
+                    const val = Math.min(Math.max(factor, caps.zoom.min), caps.zoom.max);
+                    try {
+                        await currentTrack.applyConstraints({ advanced: [{ zoom: val }] });
+                        return;
+                    } catch (e) { /* se usa el respaldo digital */ }
+                }
+            }
+            zoomEsDigital = true;
+            video.style.transform = `scale(${factor})`;
+            video.style.transformOrigin = 'center center';
+        }
 
-function mostrarPasos(){
-document.getElementById('seccionPasos').style.display='block';
-document.querySelector('.hero').style.display='none';
-document.querySelector('.features').style.display='none';
-document.querySelector('.warning-box').style.display='none';
-}
+        function capturar() {
+            captureCanvas.width = video.videoWidth;
+            captureCanvas.height = video.videoHeight;
+            const ctx = captureCanvas.getContext('2d');
 
-function mostrarSubir(){
-document.getElementById('seccionOpciones').style.display='none';
-document.getElementById('seccionSubir').style.display='block';
-}
+            if (zoomEsDigital && zoomActual > 1) {
+                const w = video.videoWidth / zoomActual;
+                const h = video.videoHeight / zoomActual;
+                const x = (video.videoWidth - w) / 2;
+                const y = (video.videoHeight - h) / 2;
+                ctx.drawImage(video, x, y, w, h, 0, 0, captureCanvas.width, captureCanvas.height);
+            } else {
+                ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+            }
 
-const uploadArea=document.getElementById('uploadArea');
-const fileInput=document.getElementById('fileInput');
+            detenerCamara();
+            captureCanvas.toBlob((blob) => enviarImagen(blob, 'resultCamera'), 'image/jpeg', 0.92);
+            document.getElementById('retryBtn').style.display = 'inline-block';
+        }
 
-uploadArea.addEventListener('click',()=>fileInput.click());
-uploadArea.addEventListener('dragover',(e)=>{e.preventDefault();uploadArea.classList.add('dragover');});
-uploadArea.addEventListener('dragleave',()=>uploadArea.classList.remove('dragover'));
-uploadArea.addEventListener('drop',(e)=>{
-e.preventDefault();
-uploadArea.classList.remove('dragover');
-if(e.dataTransfer.files.length)subirArchivo(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener('change',(e)=>{
-if(e.target.files.length)subirArchivo(e.target.files[0]);
-});
+        function detenerCamara() {
+            if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+            document.getElementById('captureBtn').style.display = 'none';
+            document.getElementById('switchBtn').style.display = 'none';
+        }
 
-async function subirArchivo(file){
-const formData=new FormData();
-formData.append('image',file);
-document.getElementById('loadingUpload').classList.add('active');
-document.getElementById('resultUpload').classList.remove('active');
-try{
-const resp=await fetch('/predict',{method:'POST',body:formData});
-const data=await resp.json();
-document.getElementById('loadingUpload').classList.remove('active');
-mostrarResultado('resultUpload',data);
-}catch(e){
-document.getElementById('loadingUpload').classList.remove('active');
-mostrarResultado('resultUpload',{error:'Error al procesar la imagen: '+e.message});
-}
-}
+        function reiniciarCamara() {
+            const resultDiv = document.getElementById('resultCamera');
+            resultDiv.innerHTML = '';
+            resultDiv.className = 'result';
+            document.getElementById('retryBtn').style.display = 'none';
+            document.getElementById('captureBtn').style.display = 'inline-block';
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('captureBtn').disabled = true;
+            document.getElementById('zoomButtons').innerHTML = '';
+        }
 
-async function generarQR(){
-document.getElementById('seccionOpciones').style.display='none';
-document.getElementById('seccionQR').style.display='block';
-document.getElementById('qrCode').innerHTML='<p>Generando codigo QR...</p>';
-document.getElementById('resultQR').classList.remove('active');
-try{
-const resp=await fetch('/api/sesion/nueva',{method:'POST'});
-const data=await resp.json();
-sesionId=data.sesion_id;
-const urlQR=`${window.location.origin}/m/${sesionId}`;
-document.getElementById('qrCode').innerHTML=`<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(urlQR)}" alt="QR">`;
-document.getElementById('qrStatus').textContent='Esperando captura desde el celular...';
-iniciarPollingQR();
-}catch(e){
-document.getElementById('qrCode').innerHTML='<p style="color:#dc2626">Error al generar QR</p>';
-}
-}
+        function construirBarraConfianza(confidence) {
+            const pct = Math.max(0, Math.min(100, confidence));
+            return `
+                <div class="confidence-row"><span>Confianza del modelo</span><span>${pct}%</span></div>
+                <div class="confidence-bar"><div class="confidence-fill" style="width:${pct}%"></div></div>
+            `;
+        }
 
-function iniciarPollingQR(){
-if(pollingQR)clearInterval(pollingQR);
-pollingQR=setInterval(async()=>{
-try{
-const resp=await fetch(`/api/sesion/${sesionId}/estado`);
-const data=await resp.json();
-if(data.estado==='listo'){
-clearInterval(pollingQR);
-pollingQR=null;
-document.getElementById('loadingQR').classList.remove('active');
-if(data.error){
-mostrarResultado('resultQR',{error:data.error});
-}else{
-mostrarResultado('resultQR',data);
-}
-}
-}catch(e){}
-},2000);
-}
+        async function enviarImagen(blob, resultId) {
+            const resultDiv = document.getElementById(resultId);
+            resultDiv.className = 'result show';
+            resultDiv.innerHTML = "Verificando que la imagen sea valida...";
+            const formData = new FormData();
+            formData.append('image', blob, 'imagen.jpg');
+            resultDiv.innerHTML = "Analizando mediante inteligencia artificial...";
+            try {
+                const res = await fetch('/predict', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.error) {
+                    showResult(data.error, "error", resultId);
+                } else {
+                    mostrarResultadoCompleto(data, resultId);
+                }
+            } catch (e) {
+                showResult("Error de conexion. Intenta de nuevo.", "error", resultId);
+            }
+        }
 
-function mostrarResultado(elementId,data){
-const el=document.getElementById(elementId);
-el.classList.add('active');
-if(data.error){
-el.className='result-box active';
-el.innerHTML=`<h3 style="color:#dc2626">Atencion</h3><p>${data.error}</p>`;
-return;
-}
-let clase='result-baja';
-if(data.result.includes('ALTA'))clase='result-alta';
-else if(data.result.includes('LEVE'))clase='result-leve';
-el.className=`result-box active ${clase}`;
-el.innerHTML=`
-<h3 style="color:#991b1b">Resultado del analisis</h3>
-<p style="font-size:1.2rem;font-weight:600;margin:15px 0">${data.result}</p>
-<p>Confianza: <strong>${data.confidence}%</strong></p>
-<div class="confidence-bar"><div class="confidence-fill" style="width:${data.confidence}%"></div></div>
-<div class="warning-box" style="margin-top:15px">
-Recuerda: este resultado es orientativo. Consulta a un profesional de la salud para un diagnostico definitivo.
-</div>
-`;
-}
-</script>
+        function mostrarResultadoCompleto(data, resultId) {
+            let cls = 'normal';
+            let etiqueta = data.result;
+            if (data.result.includes('ALTA')) cls = 'anemia';
+            else if (data.result.includes('LEVE')) cls = 'posible';
+
+            showResult(`
+                <div class="result-label">Resultado del analisis</div>
+                <div class="result-value">${etiqueta}</div>
+                ${construirBarraConfianza(data.confidence)}
+                <div class="disclaimer">Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un analisis de sangre.</div>
+            `, cls, resultId);
+        }
+
+        function showResult(html, cls, resultId) {
+            const div = document.getElementById(resultId);
+            div.innerHTML = html;
+            div.className = 'result show ' + cls;
+        }
+
+        let qrSesionId = null;
+        let qrIntervalo = null;
+
+        async function abrirQR() {
+            closeModal('modalDetector');
+            document.getElementById('qrCanvasWrap').innerHTML = '';
+            document.getElementById('resultQR').innerHTML = '';
+            document.getElementById('resultQR').className = 'result';
+            document.getElementById('qrEstadoTexto').innerHTML = '<span class="qr-spinner"></span>Generando codigo...';
+            document.getElementById('qrEstadoTexto').style.display = 'block';
+            document.getElementById('qrLinkTexto').textContent = '';
+            openModal('modalQR');
+
+            try {
+                const res = await fetch('/api/sesion/nueva', { method: 'POST' });
+                const data = await res.json();
+                qrSesionId = data.sesion_id;
+
+                const urlMovil = `${window.location.origin}/m/${qrSesionId}`;
+                new QRCode(document.getElementById('qrCanvasWrap'), {
+                    text: urlMovil,
+                    width: 180,
+                    height: 180
+                });
+                document.getElementById('qrLinkTexto').textContent = urlMovil;
+                document.getElementById('qrEstadoTexto').innerHTML = '<span class="qr-spinner"></span>Esperando captura desde el celular...';
+
+                qrIntervalo = setInterval(consultarEstadoSesion, 2000);
+            } catch (e) {
+                document.getElementById('qrEstadoTexto').textContent = 'No se pudo generar el codigo. Intenta de nuevo.';
+            }
+        }
+
+        async function consultarEstadoSesion() {
+            if (!qrSesionId) return;
+            try {
+                const res = await fetch(`/api/sesion/${qrSesionId}/estado`);
+                const data = await res.json();
+
+                if (data.estado === 'listo') {
+                    clearInterval(qrIntervalo);
+                    document.getElementById('qrEstadoTexto').style.display = 'none';
+
+                    if (data.imagen) {
+                        document.getElementById('qrCanvasWrap').innerHTML =
+                            `<img src="data:image/jpeg;base64,${data.imagen}" alt="Foto capturada" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
+                    }
+
+                    if (data.error) {
+                        showResult(data.error, 'error', 'resultQR');
+                    } else {
+                        mostrarResultadoCompleto(data, 'resultQR');
+                    }
+                }
+            } catch (e) { /* se reintenta en el siguiente ciclo */ }
+        }
+
+        function cerrarQR() {
+            if (qrIntervalo) clearInterval(qrIntervalo);
+            qrSesionId = null;
+            closeModal('modalQR');
+            openModal('modalDetector');
+        }
+    </script>
 </body>
 </html>
 """
@@ -541,294 +858,186 @@ PAGINA_MOVIL = """
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Captura guiada - Golden Detect</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;background:#000;color:white}
-.camera-container{position:relative;width:100%;height:100vh;display:flex;flex-direction:column}
-#video{width:100%;height:100%;object-fit:cover;background:#000;transition:filter 0.2s}
-.top-bar{position:absolute;top:0;left:0;right:0;padding:15px;background:linear-gradient(to bottom,rgba(0,0,0,0.7),transparent);z-index:10;display:flex;justify-content:space-between;align-items:center}
-.top-bar h2{font-size:1.1rem;color:white}
-.status{font-size:0.85rem;color:#fca5a5}
-.controls{position:absolute;bottom:0;left:0;right:0;padding:20px;background:linear-gradient(to top,rgba(0,0,0,0.85),transparent);z-index:10}
-.zoom-controls{display:flex;justify-content:center;gap:10px;margin-bottom:15px}
-.zoom-btn{background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);padding:8px 16px;border-radius:20px;font-size:0.85rem;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);transition:all 0.2s}
-.zoom-btn.active{background:#dc2626;border-color:#dc2626}
-.zoom-btn:active{transform:scale(0.95)}
-.brightness-control{display:flex;align-items:center;gap:10px;margin-bottom:15px;padding:0 10px}
-.brightness-control span{font-size:0.9rem;color:white}
-.brightness-control input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;outline:none}
-.brightness-control input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;background:#dc2626;border-radius:50%;cursor:pointer;border:2px solid white}
-.brightness-control input[type=range]::-moz-range-thumb{width:22px;height:22px;background:#dc2626;border-radius:50%;cursor:pointer;border:2px solid white}
-.main-controls{display:flex;justify-content:space-around;align-items:center}
-.ctrl-btn{background:rgba(255,255,255,0.15);color:white;border:none;width:55px;height:55px;border-radius:50%;font-size:1rem;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);transition:all 0.2s;display:flex;align-items:center;justify-content:center}
-.ctrl-btn:active{transform:scale(0.9)}
-.capture-btn{background:#dc2626;width:70px;height:70px;border:4px solid white;box-shadow:0 0 20px rgba(220,38,38,0.5)}
-.capture-btn:disabled{background:#6b7280;border-color:#9ca3af;box-shadow:none}
-.loading-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:100}
-.loading-overlay.active{display:flex}
-.spinner{border:4px solid rgba(255,255,255,0.2);border-top:4px solid #dc2626;border-radius:50%;width:60px;height:60px;animation:spin 1s linear infinite;margin-bottom:20px}
-@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-.result-card{background:white;color:#1f2937;border-radius:20px;padding:25px;max-width:90%;width:350px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.5)}
-.result-card h3{color:#991b1b;margin-bottom:15px}
-.result-card.alta{border-top:5px solid #dc2626}
-.result-card.leve{border-top:5px solid #f59e0b}
-.result-card.baja{border-top:5px solid #10b981}
-.result-card.error{border-top:5px solid #6b7280}
-.confidence-bar{background:#e5e7eb;height:8px;border-radius:4px;overflow:hidden;margin:10px 0}
-.confidence-fill{height:100%;background:linear-gradient(90deg,#10b981,#f59e0b,#dc2626)}
-.result-btn{background:#dc2626;color:white;border:none;padding:12px 24px;border-radius:25px;font-weight:600;cursor:pointer;margin-top:15px;width:100%}
-.camera-error{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;padding:20px;color:white;max-width:90%}
-.camera-error h3{color:#fca5a5;margin-bottom:10px}
-.icon-svg{width:24px;height:24px;fill:white}
-.capture-icon{width:32px;height:32px;fill:white}
-</style>
+    <meta charset="UTF-8">
+    <title>Golden Detect Anemic - Captura</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #EEF1EE; --text: #1C2321; --text-soft: #52605B; --text-faint: #7C877F;
+            --accent: #9C3B2E; --accent-strong: #832F24; --accent-soft: rgba(156,59,46,0.10);
+            --teal: #1F6F6B; --teal-soft: rgba(31,111,107,0.10);
+            --amber: #96690F; --amber-soft: rgba(150,105,15,0.10);
+            --border: #D9DCD5; --panel-2: #F4F6F3;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Work Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.3rem; margin: 0 0 6px; }
+        p.sub { color: var(--text-soft); font-size: 0.85rem; margin: 0 0 18px; }
+        .camera-card { background: #0D0B09; border-radius: 12px; overflow: hidden; }
+        .camera-wrap { position: relative; width: 100%; aspect-ratio: 3/4; background: #0a0908; overflow: hidden; }
+        video, #captureCanvas { width: 100%; height: 100%; object-fit: cover; display: block; }
+        #captureCanvas { display: none; }
+        .zoom-row { display: flex; gap: 8px; padding: 12px 14px 0; flex-wrap: wrap; }
+        .zoom-btn {
+            font-family: 'Work Sans', sans-serif; font-size: 0.78rem; font-weight: 600;
+            padding: 6px 14px; border-radius: 16px; border: 1px solid rgba(245,240,232,0.25);
+            background: transparent; color: #F5F0E8; cursor: pointer;
+        }
+        .camera-controls { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+        .camera-controls-row { display: flex; gap: 10px; }
+        button {
+            font-family: 'Work Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
+            padding: 13px; border-radius: 24px; border: 1px solid transparent; cursor: pointer; flex: 1;
+        }
+        .solid { background: var(--accent); color: #FBF6F2; }
+        .outline { background: transparent; color: #F5F0E8; border-color: rgba(245,240,232,0.3); }
+        .outline:disabled { color: rgba(245,240,232,0.3); }
+        .ghost { background: var(--panel-2); color: var(--text); border-color: var(--border); }
+        .result { margin-top: 16px; padding: 16px 18px; border-radius: 10px; font-size: 0.88rem; display: none; }
+        .result.show { display: block; }
+        .result-value { font-family: 'Fraunces', serif; font-size: 1.15rem; font-weight: 500; margin-bottom: 8px; }
+        .result.normal { background: var(--teal-soft); }
+        .result.error { background: var(--panel-2); border: 1px solid var(--border); color: var(--text-soft); }
+        .aviso-listo { font-size: 0.82rem; color: var(--teal); margin-top: 4px; }
+    </style>
 </head>
 <body>
-<div class="camera-container">
-<video id="video" autoplay playsinline muted></video>
+    <h1>Captura guiada</h1>
+    <p class="sub">Encuadra tu ojo y toma la foto. El resultado aparecera en la pantalla de la computadora.</p>
+    <div class="camera-card">
+        <div class="camera-wrap">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="captureCanvas"></canvas>
+        </div>
+        <div class="zoom-row" id="zoomButtons"></div>
+        <div class="camera-controls">
+            <div class="camera-controls-row">
+                <button class="solid" id="startBtn" onclick="iniciarCamara()">Activar camara</button>
+                <button class="outline" id="switchBtn" onclick="cambiarCamara()" style="display:none;">Cambiar camara</button>
+            </div>
+            <button class="outline" id="captureBtn" onclick="capturar()" disabled>Capturar y enviar</button>
+            <button class="ghost" id="retryBtn" onclick="location.reload()" style="display:none;">Tomar otra foto</button>
+        </div>
+    </div>
+    <div id="result" class="result"></div>
 
-<div class="top-bar">
-<h2>Captura guiada</h2>
-<span class="status" id="status">Iniciando camara...</span>
-</div>
+    <script>
+        const SESION_ID = "{{ sesion_id }}";
+        const video = document.getElementById('video');
+        const captureCanvas = document.getElementById('captureCanvas');
+        let stream = null;
+        let facingMode = 'environment';
+        let currentTrack = null;
+        let zoomActual = 1;
+        let zoomEsDigital = false;
 
-<div class="controls">
-<div class="zoom-controls">
-<button class="zoom-btn active" data-zoom="1">1x</button>
-<button class="zoom-btn" data-zoom="1.5">1.5x</button>
-<button class="zoom-btn" data-zoom="2">2x</button>
-<button class="zoom-btn" data-zoom="3">3x</button>
-</div>
+        async function iniciarCamara() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 960 } }
+                });
+                video.srcObject = stream;
+                currentTrack = stream.getVideoTracks()[0];
+                zoomActual = 1;
+                zoomEsDigital = false;
+                video.style.transform = 'none';
+                actualizarBotonesZoom();
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('switchBtn').style.display = 'inline-block';
+                document.getElementById('captureBtn').disabled = false;
+            } catch (e) {
+                mostrar('<div class="result-value">Sin acceso a la camara</div><p>Revisa los permisos del navegador.</p>', 'error');
+            }
+        }
 
-<div class="brightness-control">
-<span>Brillo</span>
-<input type="range" id="brightness" min="50" max="200" value="100">
-<span id="brightnessValue">100%</span>
-</div>
+        async function cambiarCamara() {
+            facingMode = facingMode === 'environment' ? 'user' : 'environment';
+            if (stream) { stream.getTracks().forEach(t => t.stop()); }
+            video.style.transform = 'none';
+            await iniciarCamara();
+        }
 
-<div class="main-controls">
-<button class="ctrl-btn" id="switchBtn" title="Cambiar camara">
-<svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 9V7c0-1.65-1.35-3-3-3h-4c-.35 0-.68-.13-.95-.36L11.71 2.5c-.37-.31-.83-.5-1.3-.5H6C4.35 2 3 3.35 3 5v2c0 1.1.9 2 2 2h1c.55 0 1 .45 1 1v1c0 1.1.9 2 2 2h4c1.1 0 2 .9 2 2v1c0 .55.45 1 1 1h1c1.1 0 2-.9 2-2v-2c0-1.1-.9-2-2-2h-1c-.55 0-1-.45-1-1v-1c0-1.1-.9-2-2-2H8c-1.1 0-2-.9-2-2V5c0-.55.45-1 1-1h3.59l1.71 1.14C12.95 5.63 13.76 6 14.59 6H18c.55 0 1 .45 1 1v2c0 .55.45 1 1 1s1-.45 1-1z"/></svg>
-</button>
-<button class="ctrl-btn capture-btn" id="captureBtn" title="Capturar" disabled>
-<svg class="capture-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
-</button>
-<button class="ctrl-btn" id="retakeBtn" title="Tomar otra" style="display:none">
-<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
-</button>
-</div>
-</div>
+        function actualizarBotonesZoom() {
+            const niveles = facingMode === 'environment' ? [1.5, 2, 3] : [1.5, 2];
+            const cont = document.getElementById('zoomButtons');
+            cont.innerHTML = niveles.map(n => `<button type="button" class="zoom-btn" onclick="aplicarZoom(${n})">${n}x</button>`).join('');
+        }
 
-<div class="loading-overlay" id="loadingOverlay">
-<div class="spinner"></div>
-<p id="loadingText">Analizando imagen...</p>
-<div class="result-card" id="resultCard" style="display:none"></div>
-</div>
+        async function aplicarZoom(factor) {
+            zoomActual = factor;
+            if (currentTrack && currentTrack.getCapabilities) {
+                const caps = currentTrack.getCapabilities();
+                if (caps.zoom) {
+                    zoomEsDigital = false;
+                    const val = Math.min(Math.max(factor, caps.zoom.min), caps.zoom.max);
+                    try {
+                        await currentTrack.applyConstraints({ advanced: [{ zoom: val }] });
+                        return;
+                    } catch (e) { /* se usa el respaldo digital */ }
+                }
+            }
+            zoomEsDigital = true;
+            video.style.transform = `scale(${factor})`;
+            video.style.transformOrigin = 'center center';
+        }
 
-<div class="camera-error" id="cameraError" style="display:none">
-<h3>No se pudo acceder a la camara</h3>
-<p id="errorMsg">Verifica los permisos e intenta de nuevo.</p>
-</div>
-</div>
+        function capturar() {
+            captureCanvas.width = video.videoWidth;
+            captureCanvas.height = video.videoHeight;
+            const ctx = captureCanvas.getContext('2d');
 
-<script>
-const SESION_ID = "{{ sesion_id }}";
-const video = document.getElementById('video');
-const captureBtn = document.getElementById('captureBtn');
-const switchBtn = document.getElementById('switchBtn');
-const retakeBtn = document.getElementById('retakeBtn');
-const statusEl = document.getElementById('status');
-const loadingOverlay = document.getElementById('loadingOverlay');
-const loadingText = document.getElementById('loadingText');
-const resultCard = document.getElementById('resultCard');
-const cameraError = document.getElementById('cameraError');
-const errorMsg = document.getElementById('errorMsg');
-const brightnessSlider = document.getElementById('brightness');
-const brightnessValue = document.getElementById('brightnessValue');
-const zoomBtns = document.querySelectorAll('.zoom-btn');
+            if (zoomEsDigital && zoomActual > 1) {
+                const w = video.videoWidth / zoomActual;
+                const h = video.videoHeight / zoomActual;
+                const x = (video.videoWidth - w) / 2;
+                const y = (video.videoHeight - h) / 2;
+                ctx.drawImage(video, x, y, w, h, 0, 0, captureCanvas.width, captureCanvas.height);
+            } else {
+                ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+            }
 
-let currentStream = null;
-let facingMode = 'environment';
-let currentZoom = 1;
-let currentTrack = null;
-let maxZoom = 1;
-let captured = false;
+            if (stream) { stream.getTracks().forEach(t => t.stop()); }
+            document.getElementById('captureBtn').style.display = 'none';
+            document.getElementById('switchBtn').style.display = 'none';
 
-async function iniciarCamara(){
-try{
-if(currentStream){
-currentStream.getTracks().forEach(t=>t.stop());
-}
-const constraints = {
-video: {
-facingMode: facingMode,
-width: {ideal: 1280},
-height: {ideal: 720}
-},
-audio: false
-};
-const stream = await navigator.mediaDevices.getUserMedia(constraints);
-currentStream = stream;
-video.srcObject = stream;
-await video.play();
-currentTrack = stream.getVideoTracks()[0];
-const settings = currentTrack.getSettings();
-const capabilities = currentTrack.getCapabilities ? currentTrack.getCapabilities() : {};
-maxZoom = capabilities.zoom ? Math.min(capabilities.zoom.max, 5) : 3;
-statusEl.textContent = 'Camara activa - Encuadra tu ojo';
-captureBtn.disabled = false;
-cameraError.style.display = 'none';
-aplicarZoom(currentZoom);
-}catch(e){
-console.error('Error camara:', e);
-cameraError.style.display = 'block';
-if(e.name === 'NotAllowedError'){
-errorMsg.textContent = 'Permiso de camara denegado. Habilita el acceso en la configuracion de tu navegador.';
-} else if(e.name === 'NotFoundError'){
-errorMsg.textContent = 'No se encontro ninguna camara en este dispositivo.';
-} else {
-errorMsg.textContent = e.message || 'Error desconocido al acceder a la camara.';
-}
-statusEl.textContent = 'Error de camara';
-captureBtn.disabled = true;
-}
-}
+            captureCanvas.toBlob((blob) => enviar(blob), 'image/jpeg', 0.92);
+        }
 
-async function aplicarZoom(valor){
-currentZoom = valor;
-zoomBtns.forEach(b => {
-b.classList.toggle('active', parseFloat(b.dataset.zoom) === valor);
-});
-if(!currentTrack) return;
-const capabilities = currentTrack.getCapabilities ? currentTrack.getCapabilities() : {};
-if(capabilities.zoom){
-const targetZoom = Math.min(valor, capabilities.zoom.max);
-try{
-await currentTrack.applyConstraints({advanced: [{zoom: targetZoom}]});
-video.style.transform = 'none';
-} catch(e){
-aplicarZoomCSS(valor);
-}
-} else {
-aplicarZoomCSS(valor);
-}
-}
+        async function enviar(blob) {
+            mostrarCargando("Enviando fotografia...");
+            const formData = new FormData();
+            formData.append('image', blob, 'imagen.jpg');
+            try {
+                const res = await fetch(`/api/sesion/${SESION_ID}/capturar`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.error) {
+                    mostrar(`<div class="result-value">No se pudo procesar</div><p>${data.error}</p>`, 'error');
+                } else {
+                    mostrar(`
+                        <div class="result-value">Captura exitosa</div>
+                        <p class="aviso-listo">El resultado ya aparecio en la pantalla de la computadora.</p>
+                    `, 'normal');
+                }
+                document.getElementById('retryBtn').style.display = 'block';
+            } catch (e) {
+                mostrar('<div class="result-value">Error de conexion</div><p>Intenta de nuevo.</p>', 'error');
+                document.getElementById('retryBtn').style.display = 'block';
+            }
+        }
 
-function aplicarZoomCSS(valor){
-video.style.transform = `scale(${valor})`;
-video.style.transformOrigin = 'center center';
-}
-
-switchBtn.addEventListener('click', () => {
-facingMode = facingMode === 'environment' ? 'user' : 'environment';
-statusEl.textContent = 'Cambiando camara...';
-iniciarCamara();
-});
-
-zoomBtns.forEach(btn => {
-btn.addEventListener('click', () => {
-const valor = parseFloat(btn.dataset.zoom);
-aplicarZoom(valor);
-});
-});
-
-brightnessSlider.addEventListener('input', (e) => {
-const val = e.target.value;
-brightnessValue.textContent = val + '%';
-video.style.filter = `brightness(${val/100})`;
-});
-
-captureBtn.addEventListener('click', async () => {
-if(captured) return;
-captured = true;
-captureBtn.disabled = true;
-statusEl.textContent = 'Capturando...';
-
-const canvas = document.createElement('canvas');
-const realWidth = video.videoWidth;
-const realHeight = video.videoHeight;
-canvas.width = realWidth;
-canvas.height = realHeight;
-const ctx = canvas.getContext('2d');
-
-ctx.filter = `brightness(${brightnessSlider.value/100})`;
-
-if(currentZoom > 1){
-const zoomW = realWidth / currentZoom;
-const zoomH = realHeight / currentZoom;
-const sx = (realWidth - zoomW) / 2;
-const sy = (realHeight - zoomH) / 2;
-ctx.drawImage(video, sx, sy, zoomW, zoomH, 0, 0, realWidth, realHeight);
-} else {
-ctx.drawImage(video, 0, 0, realWidth, realHeight);
-}
-
-canvas.toBlob(async (blob) => {
-const formData = new FormData();
-formData.append('image', blob, 'captura.jpg');
-loadingOverlay.classList.add('active');
-loadingText.textContent = 'Analizando imagen...';
-try{
-const resp = await fetch(`/api/sesion/${SESION_ID}/capturar`, {
-method: 'POST',
-body: formData
-});
-const data = await resp.json();
-mostrarResultado(data);
-} catch(e){
-mostrarResultado({error: 'Error al enviar la imagen: ' + e.message});
-}
-}, 'image/jpeg', 0.92);
-});
-
-retakeBtn.addEventListener('click', () => {
-loadingOverlay.classList.remove('active');
-resultCard.style.display = 'none';
-captureBtn.disabled = false;
-retakeBtn.style.display = 'none';
-captureBtn.style.display = 'flex';
-captured = false;
-statusEl.textContent = 'Camara activa - Encuadra tu ojo';
-});
-
-function mostrarResultado(data){
-loadingText.textContent = '';
-resultCard.style.display = 'block';
-retakeBtn.style.display = 'flex';
-captureBtn.style.display = 'none';
-
-if(data.error){
-resultCard.className = 'result-card error';
-resultCard.innerHTML = `
-<h3>Atencion</h3>
-<p style="margin:15px 0;color:#4b5563">${data.error}</p>
-<button class="result-btn" onclick="document.getElementById('retakeBtn').click()">Intentar de nuevo</button>
-`;
-return;
-}
-
-let clase = 'baja';
-if(data.result.includes('ALTA')) clase = 'alta';
-else if(data.result.includes('LEVE')) clase = 'leve';
-
-resultCard.className = `result-card ${clase}`;
-resultCard.innerHTML = `
-<h3>Resultado del analisis</h3>
-<p style="font-size:1.1rem;font-weight:600;margin:15px 0;color:#1f2937">${data.result}</p>
-<p style="color:#6b7280">Confianza: <strong>${data.confidence}%</strong></p>
-<div class="confidence-bar"><div class="confidence-fill" style="width:${data.confidence}%"></div></div>
-<p style="font-size:0.85rem;color:#6b7280;margin-top:15px">
-Recuerda: este resultado es orientativo. Consulta a un profesional de la salud para un diagnostico definitivo.
-</p>
-<button class="result-btn" onclick="document.getElementById('retakeBtn').click()">Tomar otra foto</button>
-`;
-}
-
-iniciarCamara();
-</script>
+        function mostrarCargando(texto) {
+            const div = document.getElementById('result');
+            div.innerHTML = texto;
+            div.className = 'result show';
+        }
+        function mostrar(html, cls) {
+            const div = document.getElementById('result');
+            div.innerHTML = html;
+            div.className = 'result show ' + cls;
+        }
+    </script>
 </body>
 </html>
 """
