@@ -1,3 +1,4 @@
+# src/web_app.py
 from flask import Flask, request, jsonify, render_template_string
 import os
 import requests
@@ -159,7 +160,7 @@ def home():
                 padding: 20px 40px;
             }
             .brand { display: flex; align-items: center; gap: 10px; }
-            .brand img { width: 28px; height: 28px; object-fit: contain; }
+            .brand img { width: 42px; height: 42px; object-fit: contain; }
             .brand-name { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; letter-spacing: -0.01em; }
             .brand-name span { color: var(--accent); }
             .nav-cta {
@@ -229,9 +230,14 @@ def home():
             .modal-text { font-size: 0.88rem; color: var(--text-soft); margin: 0 0 14px; }
             .modal-text strong { color: var(--text); }
             #modalHow .modal { max-width: 1000px; padding: 48px 44px; }
+            @media (max-width: 600px) {
+                #modalWarning .modal, #modalHow .modal, #modalDetector .modal { padding: 28px 20px; }
+            }
             #modalHow h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.6rem; text-align: center; margin: 0 0 8px; }
             #modalHow .modal-sub { text-align: center; color: var(--text-faint); font-size: 0.88rem; margin: 0 0 36px; }
             .steps-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 36px; }
+            @media (max-width: 900px) { .steps-grid { grid-template-columns: repeat(2, 1fr); } }
+            @media (max-width: 480px) { .steps-grid { grid-template-columns: 1fr; } }
             .step-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px; padding: 22px 18px; text-align: left; }
             .step-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
             .step-icon svg { width: 18px; height: 18px; color: var(--accent); }
@@ -351,7 +357,7 @@ def home():
                 </div>
             </div>
             <div class="credit">
-                <div class="credit-eureka">Proyecto de solucion tecnologica</div>
+                <div class="credit-eureka">Eureka 2026 &middot; Proyecto de investigacion escolar</div>
                 <div class="credit-inst">Institucion Educativa "Victor Manuel Maurtua" &middot; Parcona, Ica</div>
             </div>
         </section>
@@ -391,7 +397,7 @@ def home():
                     <div class="step-card">
                         <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>
                         <h3>2. Verificacion</h3>
-                        <p>El modelo comprueba que sea un ojo con conjuntiva visible.</p>
+                        <p>Gemini comprueba que sea un ojo con conjuntiva visible.</p>
                     </div>
                     <div class="step-card">
                         <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></div>
@@ -646,6 +652,8 @@ def predict():
     file.save(temp_path)
 
     try:
+        # Unica validacion previa: Gemini confirma si es un ojo con conjuntiva visible.
+        # Se elimino el filtro de brillo/nitidez con OpenCV porque generaba falsos rechazos.
         ok_ojo, mensaje_ojo = validar_imagen_es_ojo(temp_path)
         if not ok_ojo:
             os.remove(temp_path)
