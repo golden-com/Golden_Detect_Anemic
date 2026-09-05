@@ -32,10 +32,6 @@ except Exception as e:
     print("Error al cargar el modelo:", e)
     model = None
 
-# ============================================================
-# Sesiones temporales para el flujo QR (celular -> computadora)
-# En memoria: suficiente para una demo con un solo proceso (gunicorn -w 1)
-# ============================================================
 SESIONES = {}
 SESION_TTL_SEGUNDOS = 15 * 60
 
@@ -47,12 +43,6 @@ def limpiar_sesiones_viejas():
         SESIONES.pop(sid, None)
 
 
-# ============================================================
-# Imagenes de referencia (few-shot) para mejorar la verificacion
-# de que la foto sea realmente una conjuntiva palpebral valida.
-# Se cargan UNA VEZ al iniciar el servidor y nunca se muestran
-# al publico: solo se envian a Gemini como ejemplos internos.
-# ============================================================
 REF_IMAGENES_URLS = [
     "https://raw.githubusercontent.com/golden-com/Golden_Detect_Anemic/main/data/test/anemia/c (1).jpg",
     "https://raw.githubusercontent.com/golden-com/Golden_Detect_Anemic/main/data/test/anemia/c (15).jpg",
@@ -75,17 +65,20 @@ def cargar_imagenes_referencia():
 
 cargar_imagenes_referencia()
 
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    print("ADVERTENCIA: GEMINI_API_KEY no esta configurada. La verificacion de ojo/conjuntiva no puede ejecutarse.")
+
 
 def validar_imagen_es_ojo(ruta_imagen):
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        return True, "OK"
+    if not GEMINI_API_KEY:
+        return False, "LA VERIFICACION DE IMAGEN NO ESTA DISPONIBLE EN ESTE MOMENTO. Intenta de nuevo mas tarde."
 
     try:
         with open(ruta_imagen, "rb") as f:
             image_data = base64.b64encode(f.read()).decode('utf-8')
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 
         partes = []
 
@@ -94,53 +87,49 @@ def validar_imagen_es_ojo(ruta_imagen):
                 "text": "Las siguientes 1 o 2 imagenes son EJEMPLOS de referencia: fotografias validas de una conjuntiva palpebral inferior humana, bien enfocadas y encuadradas, donde el ojo ocupa una parte significativa de la imagen."
             })
             for ref_b64 in REFERENCIAS_B64:
-                partes.append({
-                    "inline_data": {"mime_type": "image/jpeg", "data": ref_b64}
-                })
+                partes.append({"inline_data": {"mime_type": "image/jpeg", "data": ref_b64}})
 
         partes.append({
             "text": (
                 "Ahora evalua la SIGUIENTE fotografia (la ultima imagen adjunta), comparandola con los "
-                "ejemplos anteriores. Responde UNICAMENTE 'SI' si muestra claramente un ojo humano con la "
-                "conjuntiva palpebral inferior visible, ocupando una parte significativa del encuadre "
-                "(similar a los ejemplos). Responde 'NO' si no es un ojo humano, si el ojo o la conjuntiva "
-                "ocupan una porcion muy pequeña de la foto, si esta muy borrosa o mal iluminada, o si es "
-                "una imagen no relacionada (objetos, paisajes, rostros completos sin enfoque en el ojo, etc)."
+                "ejemplos anteriores. Responde UNICAMENTE 'SI' si muestra claramente un ojo humano real, "
+                "con la conjuntiva palpebral inferior visible, ocupando al menos un tercio del encuadre. "
+                "Responde 'NO' si no es un ojo humano, si es un dibujo, objeto, paisaje, animal, pantalla, "
+                "rostro completo sin acercamiento al ojo, si el ojo ocupa una porcion muy pequeña de la foto, "
+                "si esta muy borrosa, muy oscura, o si es cualquier imagen no relacionada con un ojo humano. "
+                "Ante cualquier duda, responde 'NO'."
             )
         })
-        partes.append({
-            "inline_data": {"mime_type": "image/jpeg", "data": image_data}
-        })
+        partes.append({"inline_data": {"mime_type": "image/jpeg", "data": image_data}})
 
         payload = {"contents": [{"parts": partes}]}
 
-        response = requests.post(url, json=payload, timeout=12)
+        response = requests.post(url, json=payload, timeout=15)
         response.raise_for_status()
         data = response.json()
         texto = data["candidates"][0]["content"]["parts"][0]["text"].strip().upper()
 
         print(f"[Validacion ojo] Respuesta de Gemini: {texto[:80]}")
 
-        if texto.startswith("NO"):
-            return False, "LA IMAGEN BRINDADA NO CONTIENE LA CONJUNTIVA PALPEBRAL REQUERIDA. Por favor, toma una foto clara del ojo donde se vea la parte interna del parpado inferior (conjuntiva), ocupando gran parte de la imagen. La foto debe estar enfocada y con buena iluminacion."
-        else:
+        if texto.startswith("SI"):
             return True, "OK"
+        else:
+            return False, "LA IMAGEN BRINDADA NO CONTIENE LA CONJUNTIVA PALPEBRAL REQUERIDA. Por favor, toma una foto clara del ojo donde se vea la parte interna del parpado inferior (conjuntiva), ocupando gran parte de la imagen. La foto debe estar enfocada y con buena iluminacion."
 
     except Exception as e:
         print(f"[Validacion ojo] Error: {e}")
-        return True, "OK"
+        return False, "NO SE PUDO VERIFICAR LA IMAGEN. Intenta de nuevo con otra fotografia."
 
 
 def consultar_gemini(ruta_imagen):
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
+    if not GEMINI_API_KEY:
         return None
 
     try:
         with open(ruta_imagen, "rb") as f:
             image_data = base64.b64encode(f.read()).decode('utf-8')
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 
         payload = {
             "contents": [{
@@ -149,10 +138,7 @@ def consultar_gemini(ruta_imagen):
                         "text": "Eres un asistente de apoyo medico. Analiza esta imagen de un ojo humano, enfocandote especificamente en la conjuntiva palpebral inferior. Indica el nivel de probabilidad de anemia basado en la palidez observada. Responde UNICAMENTE con una de estas tres frases exactas: 'ALTA PROBABILIDAD', 'LEVE PROBABILIDAD', o 'BAJA PROBABILIDAD'. No uses comillas, no agregues explicaciones, ni saludos, ni otro texto."
                     },
                     {
-                        "inline_data": {
-                            "mime_type": "image/jpeg",
-                            "data": image_data
-                        }
+                        "inline_data": {"mime_type": "image/jpeg", "data": image_data}
                     }
                 ]
             }]
@@ -176,11 +162,6 @@ def consultar_gemini(ruta_imagen):
 
 
 def analizar_imagen(temp_path):
-    """
-    Logica central de analisis (SIN CAMBIOS respecto a la version anterior).
-    Reutilizada por /predict y por el flujo QR, para no duplicar la logica.
-    Devuelve (respuesta_dict, codigo_http)
-    """
     ok_ojo, mensaje_ojo = validar_imagen_es_ojo(temp_path)
     if not ok_ojo:
         return {'error': mensaje_ojo}, 400
@@ -354,6 +335,8 @@ PAGINA_PRINCIPAL = """
         .option-icon svg { width: 20px; height: 20px; color: var(--accent); }
         .option-card h3 { font-size: 0.95rem; font-weight: 600; margin: 0 0 6px; }
         .option-card p { font-size: 0.78rem; color: var(--text-faint); margin: 0; line-height: 1.5; }
+        @media (max-width: 767px) { .solo-pc { display: none; } }
+        @media (min-width: 768px) { .solo-movil { display: none; } }
         .upload-box {
             border: 1.5px dashed var(--border); border-radius: 12px; padding: 30px 20px;
             text-align: center; cursor: pointer; transition: border-color .2s ease;
@@ -363,29 +346,15 @@ PAGINA_PRINCIPAL = """
         .upload-box span { font-size: 0.75rem; color: var(--text-faint); }
         .mini-disclaimer { font-size: 0.75rem; color: var(--text-faint); border-left: 2px solid var(--border); padding-left: 12px; margin: 18px 0; }
         #previewUpload { max-width: 100%; max-height: 220px; border-radius: 10px; margin: 16px auto 0; display: none; }
-        #modalCamera .modal { max-width: 900px; width: 92vw; padding: 40px 36px 36px; }
-        #modalCamera h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.4rem; text-align: center; margin: 0 0 6px; }
-        #modalCamera .modal-sub { text-align: center; color: var(--text-faint); font-size: 0.85rem; margin: 0 0 26px; }
-        .detector-grid { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 32px; align-items: start; }
-        @media (max-width: 760px) { .detector-grid { grid-template-columns: 1fr; } }
-        .tips { list-style: none; padding: 0; margin: 0 0 22px; display: flex; flex-direction: column; gap: 9px; }
-        .tips li { display: flex; gap: 9px; font-size: 0.82rem; color: var(--text-soft); align-items: flex-start; }
-        .tips li::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 7px; flex-shrink: 0; }
+        #modalCamera .modal { max-width: 500px; width: 92vw; padding: 30px 26px; }
+        #modalCamera h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.3rem; text-align: center; margin: 0 0 6px; }
+        #modalCamera .modal-sub { text-align: center; color: var(--text-faint); font-size: 0.82rem; margin: 0 0 20px; }
         .camera-card { background: #0D0B09; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
-        .camera-wrap { position: relative; width: 100%; aspect-ratio: 4/3; background: #0a0908; }
-        video, #captureCanvas, #cropCanvas { width: 100%; height: 100%; object-fit: cover; display: block; }
-        #cropCanvas, #captureCanvas { display: none; }
-        .guide-overlay { position: absolute; inset: 0; pointer-events: none; }
-        .guide-oval {
-            position: absolute; top: 30%; left: 20%; width: 60%; height: 35%;
-            border: 1.5px solid rgba(245,240,232,0.8); border-radius: 50% / 60%;
-            box-shadow: 0 0 0 1200px rgba(8,6,5,0.55);
-        }
-        .guide-text {
-            position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%);
-            color: var(--text); font-size: 0.76rem; text-align: center; white-space: nowrap; letter-spacing: 0.01em;
-        }
-        .camera-controls { padding: 14px 16px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .camera-wrap { position: relative; width: 100%; aspect-ratio: 3/4; background: #0a0908; overflow: hidden; }
+        video, #captureCanvas { width: 100%; height: 100%; object-fit: cover; display: block; }
+        #captureCanvas { display: none; }
+        .camera-controls { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .camera-controls-row { display: flex; gap: 10px; flex-wrap: wrap; }
         button.ctrl {
             font-family: 'Work Sans', sans-serif; font-size: 0.84rem; font-weight: 500;
             padding: 10px 18px; border: 1px solid transparent; border-radius: 24px; cursor: pointer;
@@ -398,6 +367,13 @@ PAGINA_PRINCIPAL = """
         .ctrl.outline:disabled { color: rgba(245,240,232,0.3); cursor: not-allowed; }
         .ctrl.ghost { background: transparent; color: var(--text-soft); border-color: var(--border); }
         .ctrl.ghost:hover { border-color: var(--text-soft); }
+        .zoom-row { display: flex; gap: 8px; padding: 0 16px 14px; flex-wrap: wrap; }
+        .zoom-btn {
+            font-family: 'Work Sans', sans-serif; font-size: 0.78rem; font-weight: 600;
+            padding: 6px 14px; border-radius: 16px; border: 1px solid rgba(245,240,232,0.25);
+            background: transparent; color: #F5F0E8; cursor: pointer;
+        }
+        .zoom-btn:hover { border-color: #F5F0E8; }
         .result { margin-top: 16px; padding: 18px 20px; border-radius: 10px; font-size: 0.9rem; display: none; }
         .result.show { display: block; }
         .result-label { font-size: 0.72rem; color: var(--text-faint); margin-bottom: 3px; }
@@ -416,8 +392,6 @@ PAGINA_PRINCIPAL = """
         .result.normal .confidence-fill { background: var(--teal); }
         .result.error { background: var(--panel-2); border: 1px solid var(--border); color: var(--text-soft); }
         .result .disclaimer { font-size: 0.74rem; color: var(--text-faint); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
-
-        /* Modal QR */
         #modalQR .modal { max-width: 460px; padding: 40px 36px; text-align: center; }
         .qr-box { background: #FFFFFF; border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: inline-block; margin: 10px 0 18px; }
         #qrCanvasWrap { width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; }
@@ -505,12 +479,12 @@ PAGINA_PRINCIPAL = """
                 <div class="step-card">
                     <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3"/></svg></div>
                     <h3>1. Captura</h3>
-                    <p>Subes una foto, usas la camara con guia, o escaneas un QR con tu celular.</p>
+                    <p>Subes una foto, la tomas desde tu celular, o desde la computadora usas un QR para tomarla con tu telefono.</p>
                 </div>
                 <div class="step-card">
                     <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>
                     <h3>2. Verificacion</h3>
-                    <p>El modelo comprueba que sea un ojo con conjuntiva visible.</p>
+                    <p>El modelo comprueba que sea un ojo humano con conjuntiva visible.</p>
                 </div>
                 <div class="step-card">
                     <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></div>
@@ -546,12 +520,12 @@ PAGINA_PRINCIPAL = """
                         <h3>Subir archivo</h3>
                         <p>Selecciona una foto ya tomada desde tu dispositivo.</p>
                     </button>
-                    <button class="option-card" onclick="abrirCamara()">
+                    <button class="option-card solo-movil" onclick="abrirCamara()">
                         <div class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3"/></svg></div>
                         <h3>Tomar foto</h3>
-                        <p>Usa la camara de este dispositivo con guia visual.</p>
+                        <p>Usa la camara de tu celular.</p>
                     </button>
-                    <button class="option-card" onclick="abrirQR()">
+                    <button class="option-card solo-pc" onclick="abrirQR()">
                         <div class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 14h3v3M14 18h3v3M21 21h-3"/></svg></div>
                         <h3>Usar mi celular</h3>
                         <p>Escanea un QR y toma la foto desde tu telefono.</p>
@@ -583,38 +557,26 @@ PAGINA_PRINCIPAL = """
         <div class="modal">
             <button class="modal-close" onclick="cerrarCamara()">&times;</button>
             <button class="modal-back" onclick="cerrarCamara()">&larr; Volver</button>
-            <h2>Captura guiada</h2>
-            <p class="modal-sub">Activa la camara y ubica la conjuntiva dentro del marco guia.</p>
-            <div class="detector-grid">
-                <div>
-                    <ul class="tips">
-                        <li>Busca buena iluminacion natural, sin luz directa muy fuerte</li>
-                        <li>Baja suavemente el parpado inferior con un dedo</li>
-                        <li>Manten la camara firme y enfocada</li>
-                        <li>Evita reflejos y fotografias borrosas</li>
-                    </ul>
-                    <p class="mini-disclaimer">Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un analisis de sangre.</p>
+            <h2>Captura desde tu celular</h2>
+            <p class="modal-sub">Encuadra el ojo y toma la foto.</p>
+            <div class="camera-card">
+                <div class="camera-wrap">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="captureCanvas"></canvas>
                 </div>
-                <div>
-                    <div class="camera-card">
-                        <div class="camera-wrap">
-                            <video id="video" autoplay playsinline></video>
-                            <div class="guide-overlay">
-                                <div class="guide-oval"></div>
-                                <div class="guide-text">Ubica la conjuntiva palpebral inferior aqui</div>
-                            </div>
-                            <canvas id="captureCanvas"></canvas>
-                            <canvas id="cropCanvas"></canvas>
-                        </div>
-                        <div class="camera-controls">
-                            <button class="ctrl solid" id="startBtn" onclick="iniciarCamara()">Activar camara</button>
-                            <button class="ctrl outline" id="captureBtn" onclick="capturar()" disabled>Capturar y analizar</button>
-                            <button class="ctrl ghost" id="retryBtn" onclick="reiniciarCamara()" style="display:none;">Realizar otro analisis</button>
-                        </div>
+                <div class="zoom-row" id="zoomButtons"></div>
+                <div class="camera-controls">
+                    <div class="camera-controls-row">
+                        <button class="ctrl solid" id="startBtn" onclick="iniciarCamara()">Activar camara</button>
+                        <button class="ctrl outline" id="switchBtn" onclick="cambiarCamara()" style="display:none;">Cambiar camara</button>
                     </div>
-                    <div id="resultCamera" class="result"></div>
+                    <div class="camera-controls-row">
+                        <button class="ctrl outline" id="captureBtn" onclick="capturar()" disabled>Capturar y analizar</button>
+                        <button class="ctrl ghost" id="retryBtn" onclick="reiniciarCamara()" style="display:none;">Realizar otro analisis</button>
+                    </div>
                 </div>
             </div>
+            <div id="resultCamera" class="result"></div>
         </div>
     </div>
 
@@ -679,44 +641,91 @@ PAGINA_PRINCIPAL = """
             reader.readAsDataURL(file);
             enviarImagen(file, 'resultUpload');
         }
+
         const video = document.getElementById('video');
         const captureCanvas = document.getElementById('captureCanvas');
-        const cropCanvas = document.getElementById('cropCanvas');
         let stream = null;
-        const GUIA = { xPct: 0.20, yPct: 0.30, wPct: 0.60, hPct: 0.35 };
+        let facingMode = 'environment';
+        let currentTrack = null;
+        let zoomActual = 1;
+        let zoomEsDigital = false;
+
         async function iniciarCamara() {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } }
+                    video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 960 } }
                 });
                 video.srcObject = stream;
+                currentTrack = stream.getVideoTracks()[0];
+                zoomActual = 1;
+                zoomEsDigital = false;
+                video.style.transform = 'none';
+                actualizarBotonesZoom();
                 document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('switchBtn').style.display = 'inline-block';
                 document.getElementById('captureBtn').disabled = false;
             } catch (e) {
                 showResult('No se pudo acceder a la camara. Revisa los permisos del navegador.', 'error', 'resultCamera');
             }
         }
+
+        async function cambiarCamara() {
+            facingMode = facingMode === 'environment' ? 'user' : 'environment';
+            if (stream) { stream.getTracks().forEach(t => t.stop()); }
+            video.style.transform = 'none';
+            await iniciarCamara();
+        }
+
+        function actualizarBotonesZoom() {
+            const niveles = facingMode === 'environment' ? [1.5, 2, 3] : [1.5, 2];
+            const cont = document.getElementById('zoomButtons');
+            cont.innerHTML = niveles.map(n => `<button type="button" class="zoom-btn" onclick="aplicarZoom(${n})">${n}x</button>`).join('');
+        }
+
+        async function aplicarZoom(factor) {
+            zoomActual = factor;
+            if (currentTrack && currentTrack.getCapabilities) {
+                const caps = currentTrack.getCapabilities();
+                if (caps.zoom) {
+                    zoomEsDigital = false;
+                    const val = Math.min(Math.max(factor, caps.zoom.min), caps.zoom.max);
+                    try {
+                        await currentTrack.applyConstraints({ advanced: [{ zoom: val }] });
+                        return;
+                    } catch (e) { /* se usa el respaldo digital */ }
+                }
+            }
+            zoomEsDigital = true;
+            video.style.transform = `scale(${factor})`;
+            video.style.transformOrigin = 'center center';
+        }
+
         function capturar() {
             captureCanvas.width = video.videoWidth;
             captureCanvas.height = video.videoHeight;
             const ctx = captureCanvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
-            const cropX = GUIA.xPct * captureCanvas.width;
-            const cropY = GUIA.yPct * captureCanvas.height;
-            const cropW = GUIA.wPct * captureCanvas.width;
-            const cropH = GUIA.hPct * captureCanvas.height;
-            cropCanvas.width = cropW;
-            cropCanvas.height = cropH;
-            const cctx = cropCanvas.getContext('2d');
-            cctx.drawImage(captureCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+            if (zoomEsDigital && zoomActual > 1) {
+                const w = video.videoWidth / zoomActual;
+                const h = video.videoHeight / zoomActual;
+                const x = (video.videoWidth - w) / 2;
+                const y = (video.videoHeight - h) / 2;
+                ctx.drawImage(video, x, y, w, h, 0, 0, captureCanvas.width, captureCanvas.height);
+            } else {
+                ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+            }
+
             detenerCamara();
-            cropCanvas.toBlob((blob) => enviarImagen(blob, 'resultCamera'), 'image/jpeg', 0.92);
+            captureCanvas.toBlob((blob) => enviarImagen(blob, 'resultCamera'), 'image/jpeg', 0.92);
             document.getElementById('retryBtn').style.display = 'inline-block';
         }
+
         function detenerCamara() {
             if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
             document.getElementById('captureBtn').style.display = 'none';
+            document.getElementById('switchBtn').style.display = 'none';
         }
+
         function reiniciarCamara() {
             const resultDiv = document.getElementById('resultCamera');
             resultDiv.innerHTML = '';
@@ -725,9 +734,10 @@ PAGINA_PRINCIPAL = """
             document.getElementById('captureBtn').style.display = 'inline-block';
             document.getElementById('startBtn').style.display = 'inline-block';
             document.getElementById('captureBtn').disabled = true;
+            document.getElementById('zoomButtons').innerHTML = '';
         }
 
-        function construirBarraConfianza(confidence, cls) {
+        function construirBarraConfianza(confidence) {
             const pct = Math.max(0, Math.min(100, confidence));
             return `
                 <div class="confidence-row"><span>Confianza del modelo</span><span>${pct}%</span></div>
@@ -764,7 +774,7 @@ PAGINA_PRINCIPAL = """
             showResult(`
                 <div class="result-label">Resultado del analisis</div>
                 <div class="result-value">${etiqueta}</div>
-                ${construirBarraConfianza(data.confidence, cls)}
+                ${construirBarraConfianza(data.confidence)}
                 <div class="disclaimer">Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un analisis de sangre.</div>
             `, cls, resultId);
         }
@@ -775,7 +785,6 @@ PAGINA_PRINCIPAL = """
             div.className = 'result show ' + cls;
         }
 
-        /* ---- Flujo QR (celular -> computadora) ---- */
         let qrSesionId = null;
         let qrIntervalo = null;
 
@@ -866,24 +875,21 @@ PAGINA_MOVIL = """
         body { font-family: 'Work Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.3rem; margin: 0 0 6px; }
         p.sub { color: var(--text-soft); font-size: 0.85rem; margin: 0 0 18px; }
-        .tips { list-style: none; padding: 0; margin: 0 0 16px; }
-        .tips li { font-size: 0.8rem; color: var(--text-soft); margin-bottom: 6px; padding-left: 14px; position: relative; }
-        .tips li::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); position: absolute; left: 0; top: 6px; }
         .camera-card { background: #0D0B09; border-radius: 12px; overflow: hidden; }
-        .camera-wrap { position: relative; width: 100%; aspect-ratio: 3/4; background: #0a0908; }
-        video, #captureCanvas, #cropCanvas { width: 100%; height: 100%; object-fit: cover; display: block; }
-        #cropCanvas, #captureCanvas { display: none; }
-        .guide-overlay { position: absolute; inset: 0; pointer-events: none; }
-        .guide-oval {
-            position: absolute; top: 32%; left: 15%; width: 70%; height: 30%;
-            border: 1.5px solid rgba(245,240,232,0.8); border-radius: 50% / 60%;
-            box-shadow: 0 0 0 1200px rgba(8,6,5,0.55);
+        .camera-wrap { position: relative; width: 100%; aspect-ratio: 3/4; background: #0a0908; overflow: hidden; }
+        video, #captureCanvas { width: 100%; height: 100%; object-fit: cover; display: block; }
+        #captureCanvas { display: none; }
+        .zoom-row { display: flex; gap: 8px; padding: 12px 14px 0; flex-wrap: wrap; }
+        .zoom-btn {
+            font-family: 'Work Sans', sans-serif; font-size: 0.78rem; font-weight: 600;
+            padding: 6px 14px; border-radius: 16px; border: 1px solid rgba(245,240,232,0.25);
+            background: transparent; color: #F5F0E8; cursor: pointer;
         }
-        .guide-text { position: absolute; bottom: 6%; left: 50%; transform: translateX(-50%); color: #F5F0E8; font-size: 0.78rem; text-align: center; padding: 0 16px; }
         .camera-controls { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+        .camera-controls-row { display: flex; gap: 10px; }
         button {
             font-family: 'Work Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
-            padding: 13px; border-radius: 24px; border: 1px solid transparent; cursor: pointer;
+            padding: 13px; border-radius: 24px; border: 1px solid transparent; cursor: pointer; flex: 1;
         }
         .solid { background: var(--accent); color: #FBF6F2; }
         .outline { background: transparent; color: #F5F0E8; border-color: rgba(245,240,232,0.3); }
@@ -892,36 +898,25 @@ PAGINA_MOVIL = """
         .result { margin-top: 16px; padding: 16px 18px; border-radius: 10px; font-size: 0.88rem; display: none; }
         .result.show { display: block; }
         .result-value { font-family: 'Fraunces', serif; font-size: 1.15rem; font-weight: 500; margin-bottom: 8px; }
-        .confidence-row { font-size: 0.8rem; color: var(--text-soft); margin-bottom: 4px; display: flex; justify-content: space-between; }
-        .confidence-bar { height: 8px; background: rgba(0,0,0,0.08); border-radius: 5px; overflow: hidden; margin-bottom: 10px; }
-        .confidence-fill { height: 100%; border-radius: 5px; }
-        .result.anemia { background: var(--accent-soft); } .result.anemia .confidence-fill { background: var(--accent-strong); }
-        .result.posible { background: var(--amber-soft); } .result.posible .confidence-fill { background: var(--amber); }
-        .result.normal { background: var(--teal-soft); } .result.normal .confidence-fill { background: var(--teal); }
+        .result.normal { background: var(--teal-soft); }
         .result.error { background: var(--panel-2); border: 1px solid var(--border); color: var(--text-soft); }
-        .aviso-listo { font-size: 0.82rem; color: var(--teal); margin-top: 10px; text-align: center; }
+        .aviso-listo { font-size: 0.82rem; color: var(--teal); margin-top: 4px; }
     </style>
 </head>
 <body>
     <h1>Captura guiada</h1>
-    <p class="sub">Ubica la conjuntiva dentro del marco. El resultado aparecera en la pantalla de la computadora.</p>
-    <ul class="tips">
-        <li>Busca buena iluminacion natural</li>
-        <li>Baja suavemente el parpado inferior</li>
-        <li>Manten el telefono firme</li>
-    </ul>
+    <p class="sub">Encuadra tu ojo y toma la foto. El resultado aparecera en la pantalla de la computadora.</p>
     <div class="camera-card">
         <div class="camera-wrap">
             <video id="video" autoplay playsinline></video>
-            <div class="guide-overlay">
-                <div class="guide-oval"></div>
-                <div class="guide-text">Ubica la conjuntiva aqui</div>
-            </div>
             <canvas id="captureCanvas"></canvas>
-            <canvas id="cropCanvas"></canvas>
         </div>
+        <div class="zoom-row" id="zoomButtons"></div>
         <div class="camera-controls">
-            <button class="solid" id="startBtn" onclick="iniciarCamara()">Activar camara</button>
+            <div class="camera-controls-row">
+                <button class="solid" id="startBtn" onclick="iniciarCamara()">Activar camara</button>
+                <button class="outline" id="switchBtn" onclick="cambiarCamara()" style="display:none;">Cambiar camara</button>
+            </div>
             <button class="outline" id="captureBtn" onclick="capturar()" disabled>Capturar y enviar</button>
             <button class="ghost" id="retryBtn" onclick="location.reload()" style="display:none;">Tomar otra foto</button>
         </div>
@@ -932,41 +927,82 @@ PAGINA_MOVIL = """
         const SESION_ID = "{{ sesion_id }}";
         const video = document.getElementById('video');
         const captureCanvas = document.getElementById('captureCanvas');
-        const cropCanvas = document.getElementById('cropCanvas');
         let stream = null;
-        const GUIA = { xPct: 0.15, yPct: 0.32, wPct: 0.70, hPct: 0.30 };
+        let facingMode = 'environment';
+        let currentTrack = null;
+        let zoomActual = 1;
+        let zoomEsDigital = false;
 
         async function iniciarCamara() {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } }
+                    video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 960 } }
                 });
                 video.srcObject = stream;
+                currentTrack = stream.getVideoTracks()[0];
+                zoomActual = 1;
+                zoomEsDigital = false;
+                video.style.transform = 'none';
+                actualizarBotonesZoom();
                 document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('switchBtn').style.display = 'inline-block';
                 document.getElementById('captureBtn').disabled = false;
             } catch (e) {
-                mostrar('No se pudo acceder a la camara. Revisa los permisos.', 'error');
+                mostrar('<div class="result-value">Sin acceso a la camara</div><p>Revisa los permisos del navegador.</p>', 'error');
             }
+        }
+
+        async function cambiarCamara() {
+            facingMode = facingMode === 'environment' ? 'user' : 'environment';
+            if (stream) { stream.getTracks().forEach(t => t.stop()); }
+            video.style.transform = 'none';
+            await iniciarCamara();
+        }
+
+        function actualizarBotonesZoom() {
+            const niveles = facingMode === 'environment' ? [1.5, 2, 3] : [1.5, 2];
+            const cont = document.getElementById('zoomButtons');
+            cont.innerHTML = niveles.map(n => `<button type="button" class="zoom-btn" onclick="aplicarZoom(${n})">${n}x</button>`).join('');
+        }
+
+        async function aplicarZoom(factor) {
+            zoomActual = factor;
+            if (currentTrack && currentTrack.getCapabilities) {
+                const caps = currentTrack.getCapabilities();
+                if (caps.zoom) {
+                    zoomEsDigital = false;
+                    const val = Math.min(Math.max(factor, caps.zoom.min), caps.zoom.max);
+                    try {
+                        await currentTrack.applyConstraints({ advanced: [{ zoom: val }] });
+                        return;
+                    } catch (e) { /* se usa el respaldo digital */ }
+                }
+            }
+            zoomEsDigital = true;
+            video.style.transform = `scale(${factor})`;
+            video.style.transformOrigin = 'center center';
         }
 
         function capturar() {
             captureCanvas.width = video.videoWidth;
             captureCanvas.height = video.videoHeight;
-            captureCanvas.getContext('2d').drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+            const ctx = captureCanvas.getContext('2d');
 
-            const cropX = GUIA.xPct * captureCanvas.width;
-            const cropY = GUIA.yPct * captureCanvas.height;
-            const cropW = GUIA.wPct * captureCanvas.width;
-            const cropH = GUIA.hPct * captureCanvas.height;
-
-            cropCanvas.width = cropW;
-            cropCanvas.height = cropH;
-            cropCanvas.getContext('2d').drawImage(captureCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+            if (zoomEsDigital && zoomActual > 1) {
+                const w = video.videoWidth / zoomActual;
+                const h = video.videoHeight / zoomActual;
+                const x = (video.videoWidth - w) / 2;
+                const y = (video.videoHeight - h) / 2;
+                ctx.drawImage(video, x, y, w, h, 0, 0, captureCanvas.width, captureCanvas.height);
+            } else {
+                ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+            }
 
             if (stream) { stream.getTracks().forEach(t => t.stop()); }
             document.getElementById('captureBtn').style.display = 'none';
+            document.getElementById('switchBtn').style.display = 'none';
 
-            cropCanvas.toBlob((blob) => enviar(blob), 'image/jpeg', 0.92);
+            captureCanvas.toBlob((blob) => enviar(blob), 'image/jpeg', 0.92);
         }
 
         async function enviar(blob) {
@@ -978,14 +1014,13 @@ PAGINA_MOVIL = """
                 const data = await res.json();
                 if (data.error) {
                     mostrar(`<div class="result-value">No se pudo procesar</div><p>${data.error}</p>`, 'error');
-                    document.getElementById('retryBtn').style.display = 'block';
                 } else {
                     mostrar(`
                         <div class="result-value">Captura exitosa</div>
-                        <p>El resultado ya aparecio en la pantalla de la computadora.</p>
+                        <p class="aviso-listo">El resultado ya aparecio en la pantalla de la computadora.</p>
                     `, 'normal');
-                    /* Sin boton de reintentar: la captura ya se envio y la sesion se cierra desde la computadora */
                 }
+                document.getElementById('retryBtn').style.display = 'block';
             } catch (e) {
                 mostrar('<div class="result-value">Error de conexion</div><p>Intenta de nuevo.</p>', 'error');
                 document.getElementById('retryBtn').style.display = 'block';
@@ -1053,8 +1088,6 @@ def capturar_sesion(sesion_id):
     temp_path = f'temp_{sesion_id}.jpg'
     file.save(temp_path)
 
-    # Guardamos una copia de la foto en base64 para mostrarla en la PC
-    # (reemplaza al QR en cuanto llega el resultado).
     try:
         with open(temp_path, 'rb') as f:
             imagen_b64 = base64.b64encode(f.read()).decode('utf-8')
