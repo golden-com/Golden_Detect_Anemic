@@ -5,6 +5,7 @@ import base64
 import numpy as np
 import uuid
 import time
+import urllib.parse
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
@@ -46,6 +47,35 @@ def limpiar_sesiones_viejas():
         SESIONES.pop(sid, None)
 
 
+# ============================================================
+# Imagenes de referencia (few-shot) para mejorar la verificacion
+# de que la foto sea realmente una conjuntiva palpebral valida.
+# Se cargan UNA VEZ al iniciar el servidor y nunca se muestran
+# al publico: solo se envian a Gemini como ejemplos internos.
+# ============================================================
+REF_IMAGENES_URLS = [
+    "https://raw.githubusercontent.com/golden-com/Golden_Detect_Anemic/main/data/test/anemia/c (1).jpg",
+    "https://raw.githubusercontent.com/golden-com/Golden_Detect_Anemic/main/data/test/anemia/c (15).jpg",
+]
+
+REFERENCIAS_B64 = []
+
+
+def cargar_imagenes_referencia():
+    for url in REF_IMAGENES_URLS:
+        try:
+            url_codificada = urllib.parse.quote(url, safe=':/')
+            resp = requests.get(url_codificada, timeout=10)
+            resp.raise_for_status()
+            REFERENCIAS_B64.append(base64.b64encode(resp.content).decode('utf-8'))
+            print(f"[referencia] cargada correctamente: {url}")
+        except Exception as e:
+            print(f"[referencia] No se pudo cargar {url}: {e}")
+
+
+cargar_imagenes_referencia()
+
+
 def validar_imagen_es_ojo(ruta_imagen):
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -57,29 +87,42 @@ def validar_imagen_es_ojo(ruta_imagen):
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
 
-        payload = {
-            "contents": [{
-                "parts": [
-                    {
-                        "text": "Analiza esta imagen. Es una fotografia clara de un ojo humano donde se puede ver la conjuntiva palpebral inferior? Responde UNICAMENTE con 'SI' si es un ojo valido con conjuntiva visible, o 'NO' si no es un ojo, esta muy borroso, no se ve la conjuntiva, o es una imagen no relacionada."
-                    },
-                    {
-                        "inline_data": {
-                            "mime_type": "image/jpeg",
-                            "data": image_data
-                        }
-                    }
-                ]
-            }]
-        }
+        partes = []
 
-        response = requests.post(url, json=payload, timeout=8)
+        if REFERENCIAS_B64:
+            partes.append({
+                "text": "Las siguientes 1 o 2 imagenes son EJEMPLOS de referencia: fotografias validas de una conjuntiva palpebral inferior humana, bien enfocadas y encuadradas, donde el ojo ocupa una parte significativa de la imagen."
+            })
+            for ref_b64 in REFERENCIAS_B64:
+                partes.append({
+                    "inline_data": {"mime_type": "image/jpeg", "data": ref_b64}
+                })
+
+        partes.append({
+            "text": (
+                "Ahora evalua la SIGUIENTE fotografia (la ultima imagen adjunta), comparandola con los "
+                "ejemplos anteriores. Responde UNICAMENTE 'SI' si muestra claramente un ojo humano con la "
+                "conjuntiva palpebral inferior visible, ocupando una parte significativa del encuadre "
+                "(similar a los ejemplos). Responde 'NO' si no es un ojo humano, si el ojo o la conjuntiva "
+                "ocupan una porcion muy pequeña de la foto, si esta muy borrosa o mal iluminada, o si es "
+                "una imagen no relacionada (objetos, paisajes, rostros completos sin enfoque en el ojo, etc)."
+            )
+        })
+        partes.append({
+            "inline_data": {"mime_type": "image/jpeg", "data": image_data}
+        })
+
+        payload = {"contents": [{"parts": partes}]}
+
+        response = requests.post(url, json=payload, timeout=12)
         response.raise_for_status()
         data = response.json()
         texto = data["candidates"][0]["content"]["parts"][0]["text"].strip().upper()
 
-        if "NO" in texto:
-            return False, "LA IMAGEN BRINDADA NO CONTIENE LA CONJUNTIVA PALPEBRAL REQUERIDA. Por favor, toma una foto clara del ojo donde se vea la parte interna del parpado inferior (conjuntiva). La foto debe estar enfocada, con buena iluminacion y mostrar claramente el ojo."
+        print(f"[Validacion ojo] Respuesta de Gemini: {texto[:80]}")
+
+        if texto.startswith("NO"):
+            return False, "LA IMAGEN BRINDADA NO CONTIENE LA CONJUNTIVA PALPEBRAL REQUERIDA. Por favor, toma una foto clara del ojo donde se vea la parte interna del parpado inferior (conjuntiva), ocupando gran parte de la imagen. La foto debe estar enfocada y con buena iluminacion."
         else:
             return True, "OK"
 
@@ -775,6 +818,12 @@ PAGINA_PRINCIPAL = """
                 if (data.estado === 'listo') {
                     clearInterval(qrIntervalo);
                     document.getElementById('qrEstadoTexto').style.display = 'none';
+
+                    if (data.imagen) {
+                        document.getElementById('qrCanvasWrap').innerHTML =
+                            `<img src="data:image/jpeg;base64,${data.imagen}" alt="Foto capturada" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
+                    }
+
                     if (data.error) {
                         showResult(data.error, 'error', 'resultQR');
                     } else {
@@ -921,28 +970,24 @@ PAGINA_MOVIL = """
         }
 
         async function enviar(blob) {
-            mostrarCargando("Analizando mediante inteligencia artificial...");
+            mostrarCargando("Enviando fotografia...");
             const formData = new FormData();
             formData.append('image', blob, 'imagen.jpg');
             try {
                 const res = await fetch(`/api/sesion/${SESION_ID}/capturar`, { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.error) {
-                    mostrar(data.error, 'error');
+                    mostrar(`<div class="result-value">No se pudo procesar</div><p>${data.error}</p>`, 'error');
+                    document.getElementById('retryBtn').style.display = 'block';
                 } else {
-                    let cls = 'normal';
-                    if (data.result.includes('ALTA')) cls = 'anemia';
-                    else if (data.result.includes('LEVE')) cls = 'posible';
                     mostrar(`
-                        <div class="result-value">${data.result}</div>
-                        <div class="confidence-row"><span>Confianza</span><span>${data.confidence}%</span></div>
-                        <div class="confidence-bar"><div class="confidence-fill" style="width:${data.confidence}%"></div></div>
-                        <div class="aviso-listo">Resultado enviado a la pantalla de la computadora.</div>
-                    `, cls);
+                        <div class="result-value">Captura exitosa</div>
+                        <p>El resultado ya aparecio en la pantalla de la computadora.</p>
+                    `, 'normal');
+                    /* Sin boton de reintentar: la captura ya se envio y la sesion se cierra desde la computadora */
                 }
-                document.getElementById('retryBtn').style.display = 'block';
             } catch (e) {
-                mostrar('Error de conexion. Intenta de nuevo.', 'error');
+                mostrar('<div class="result-value">Error de conexion</div><p>Intenta de nuevo.</p>', 'error');
                 document.getElementById('retryBtn').style.display = 'block';
             }
         }
@@ -1008,14 +1053,22 @@ def capturar_sesion(sesion_id):
     temp_path = f'temp_{sesion_id}.jpg'
     file.save(temp_path)
 
+    # Guardamos una copia de la foto en base64 para mostrarla en la PC
+    # (reemplaza al QR en cuanto llega el resultado).
+    try:
+        with open(temp_path, 'rb') as f:
+            imagen_b64 = base64.b64encode(f.read()).decode('utf-8')
+    except Exception:
+        imagen_b64 = None
+
     try:
         respuesta, codigo = analizar_imagen(temp_path)
         os.remove(temp_path)
 
         if codigo == 200:
-            SESIONES[sesion_id] = {'estado': 'listo', 'creada': time.time(), **respuesta}
+            SESIONES[sesion_id] = {'estado': 'listo', 'creada': time.time(), 'imagen': imagen_b64, **respuesta}
         else:
-            SESIONES[sesion_id] = {'estado': 'listo', 'creada': time.time(), 'error': respuesta.get('error')}
+            SESIONES[sesion_id] = {'estado': 'listo', 'creada': time.time(), 'imagen': imagen_b64, 'error': respuesta.get('error')}
 
         return jsonify(respuesta), codigo
 
@@ -1023,7 +1076,7 @@ def capturar_sesion(sesion_id):
         if os.path.exists(temp_path):
             os.remove(temp_path)
         error_msg = f'Error procesando la imagen: {str(e)}'
-        SESIONES[sesion_id] = {'estado': 'listo', 'creada': time.time(), 'error': error_msg}
+        SESIONES[sesion_id] = {'estado': 'listo', 'creada': time.time(), 'imagen': imagen_b64, 'error': error_msg}
         return jsonify({'error': error_msg}), 500
 
 
