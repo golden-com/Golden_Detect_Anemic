@@ -218,7 +218,7 @@ header p{color:#6b7280;font-size:1.1rem}
 .btn-secondary:hover{background:#b91c1c;color:white}
 .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;margin:30px 0}
 .feature{background:white;padding:25px;border-radius:15px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.05)}
-.feature-icon{font-size:2.5rem;margin-bottom:10px}
+.feature-icon{font-size:2.5rem;margin-bottom:10px;color:#dc2626;font-weight:bold}
 .feature h3{color:#991b1b;margin-bottom:8px}
 .feature p{color:#6b7280;font-size:0.95rem}
 .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center}
@@ -230,14 +230,14 @@ header p{color:#6b7280;font-size:1.1rem}
 .upload-area:hover{background:#fee2e2}
 .upload-area.dragover{background:#fecaca;border-color:#991b1b}
 .upload-area p{color:#6b7280;margin:10px 0}
-.upload-icon{font-size:3rem;color:#dc2626}
+.upload-icon{font-size:3rem;color:#dc2626;margin-bottom:10px}
 #fileInput{display:none}
 .options-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:20px}
 .option-card{background:#fef2f2;border:2px solid #fecaca;border-radius:15px;padding:20px;text-align:center;cursor:pointer;transition:all 0.3s}
 .option-card:hover{border-color:#dc2626;background:#fee2e2;transform:translateY(-2px)}
 .option-card h4{color:#991b1b;margin-bottom:8px}
 .option-card p{color:#6b7280;font-size:0.9rem}
-.option-icon{font-size:2.5rem;margin-bottom:10px}
+.option-icon{font-size:2.5rem;margin-bottom:10px;color:#dc2626;font-weight:bold}
 .qr-section{text-align:center;padding:20px}
 #qrCode{background:white;padding:15px;border-radius:15px;display:inline-block;margin:15px 0;box-shadow:0 4px 15px rgba(0,0,0,0.1)}
 #qrCode img{width:250px;height:250px}
@@ -268,7 +268,7 @@ footer{text-align:center;padding:20px;color:#6b7280;font-size:0.9rem}
 <body>
 <div class="container">
 <header>
-<h1>🩸 Golden Detect Anemic</h1>
+<h1>Golden Detect Anemic</h1>
 <p>Evaluacion preliminar de anemia mediante inteligencia artificial</p>
 </header>
 
@@ -276,29 +276,29 @@ footer{text-align:center;padding:20px;color:#6b7280;font-size:0.9rem}
 <h2>Una fotografia de la conjuntiva palpebral inferior, analizada en segundos</h2>
 <p>Golden Detect Anemic utiliza un modelo de inteligencia artificial entrenado para ofrecer una orientacion preliminar sobre posibles signos de anemia. <strong>No reemplaza un examen medico ni un analisis de sangre.</strong></p>
 <button class="btn btn-primary" onclick="mostrarOpciones()">Iniciar mi analisis</button>
-<button class="btn btn-secondary" onclick="mostrarPasos()" style="margin-left:10px">Descubre como funciona ↓</button>
+<button class="btn btn-secondary" onclick="mostrarPasos()" style="margin-left:10px">Descubre como funciona</button>
 </div>
 
 <div class="features">
 <div class="feature">
-<div class="feature-icon">📋</div>
+<div class="feature-icon">01</div>
 <h3>Evaluacion preliminar</h3>
 <p>No diagnostica, solo orienta</p>
 </div>
 <div class="feature">
-<div class="feature-icon">⚡</div>
+<div class="feature-icon">02</div>
 <h3>Resultado en segundos</h3>
 <p>Analisis rapido con IA</p>
 </div>
 <div class="feature">
-<div class="feature-icon">💚</div>
+<div class="feature-icon">03</div>
 <h3>Sin costo</h3>
 <p>Uso educativo gratuito</p>
 </div>
 </div>
 
 <div class="warning-box">
-<strong>⚠️ Advertencia medica:</strong> Golden Detect Anemic es una herramienta unicamente informativa. Los resultados generados por la IA NO CONSTITUYEN UN DIAGNOSTICO MEDICO. En caso de duda o sospecha de anemia, consulte a un profesional de la salud.
+<strong>Advertencia medica:</strong> Golden Detect Anemic es una herramienta unicamente informativa. Los resultados generados por la IA NO CONSTITUYEN UN DIAGNOSTICO MEDICO. En caso de duda o sospecha de anemia, consulte a un profesional de la salud.
 </div>
 
 <div id="seccionOpciones" style="display:none">
@@ -307,17 +307,17 @@ footer{text-align:center;padding:20px;color:#6b7280;font-size:0.9rem}
 <p>Elige como quieres proporcionar la fotografia.</p>
 <div class="options-grid">
 <div class="option-card" onclick="mostrarSubir()">
-<div class="option-icon">📁</div>
+<div class="option-icon">01</div>
 <h4>Subir archivo</h4>
 <p>Selecciona una foto ya tomada desde tu dispositivo.</p>
 </div>
 <div class="option-card" onclick="generarQR()">
-<div class="option-icon">📱</div>
+<div class="option-icon">02</div>
 <h4>Usar mi celular</h4>
 <p>Escanea un QR y toma la foto desde tu telefono.</p>
 </div>
 </div>
-<button class="btn btn-secondary" onclick="ocultarOpciones()" style="margin-top:20px">← Volver</button>
+<button class="btn btn-secondary" onclick="ocultarOpciones()" style="margin-top:20px">Volver</button>
 </div>
 </div>
 
@@ -326,7 +326,7 @@ footer{text-align:center;padding:20px;color:#6b7280;font-size:0.9rem}
 <h2>Subir archivo</h2>
 <p>Elige una foto donde se vea con claridad la conjuntiva palpebral inferior.</p>
 <div class="upload-area" id="uploadArea">
-<div class="upload-icon">📷</div>
+<div class="upload-icon">+</div>
 <p><strong>Haz clic para seleccionar una imagen</strong></p>
 <p>JPG o PNG</p>
 <input type="file" id="fileInput" accept="image/*">
@@ -339,7 +339,7 @@ Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un ana
 <p>Analizando imagen...</p>
 </div>
 <div class="result-box" id="resultUpload"></div>
-<button class="btn btn-secondary" onclick="volverOpciones()" style="margin-top:15px">← Volver</button>
+<button class="btn btn-secondary" onclick="volverOpciones()" style="margin-top:15px">Volver</button>
 </div>
 </div>
 
@@ -356,7 +356,7 @@ Esta es una evaluacion preliminar y no reemplaza un diagnostico medico ni un ana
 </div>
 <div class="result-box" id="resultQR"></div>
 </div>
-<button class="btn btn-secondary" onclick="volverOpciones()" style="margin-top:15px">← Volver</button>
+<button class="btn btn-secondary" onclick="volverOpciones()" style="margin-top:15px">Volver</button>
 </div>
 </div>
 
@@ -514,7 +514,7 @@ const el=document.getElementById(elementId);
 el.classList.add('active');
 if(data.error){
 el.className='result-box active';
-el.innerHTML=`<h3 style="color:#dc2626">⚠️ Atencion</h3><p>${data.error}</p>`;
+el.innerHTML=`<h3 style="color:#dc2626">Atencion</h3><p>${data.error}</p>`;
 return;
 }
 let clase='result-baja';
@@ -558,12 +558,12 @@ html,body{height:100%;overflow:hidden;background:#000;color:white}
 .zoom-btn.active{background:#dc2626;border-color:#dc2626}
 .zoom-btn:active{transform:scale(0.95)}
 .brightness-control{display:flex;align-items:center;gap:10px;margin-bottom:15px;padding:0 10px}
-.brightness-control span{font-size:1.2rem}
+.brightness-control span{font-size:0.9rem;color:white}
 .brightness-control input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;outline:none}
 .brightness-control input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;background:#dc2626;border-radius:50%;cursor:pointer;border:2px solid white}
 .brightness-control input[type=range]::-moz-range-thumb{width:22px;height:22px;background:#dc2626;border-radius:50%;cursor:pointer;border:2px solid white}
 .main-controls{display:flex;justify-content:space-around;align-items:center}
-.ctrl-btn{background:rgba(255,255,255,0.15);color:white;border:none;width:55px;height:55px;border-radius:50%;font-size:1.5rem;cursor:pointer;backdrop-filter:blur(10px);transition:all 0.2s;display:flex;align-items:center;justify-content:center}
+.ctrl-btn{background:rgba(255,255,255,0.15);color:white;border:none;width:55px;height:55px;border-radius:50%;font-size:1rem;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);transition:all 0.2s;display:flex;align-items:center;justify-content:center}
 .ctrl-btn:active{transform:scale(0.9)}
 .capture-btn{background:#dc2626;width:70px;height:70px;border:4px solid white;box-shadow:0 0 20px rgba(220,38,38,0.5)}
 .capture-btn:disabled{background:#6b7280;border-color:#9ca3af;box-shadow:none}
@@ -582,6 +582,8 @@ html,body{height:100%;overflow:hidden;background:#000;color:white}
 .result-btn{background:#dc2626;color:white;border:none;padding:12px 24px;border-radius:25px;font-weight:600;cursor:pointer;margin-top:15px;width:100%}
 .camera-error{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;padding:20px;color:white;max-width:90%}
 .camera-error h3{color:#fca5a5;margin-bottom:10px}
+.icon-svg{width:24px;height:24px;fill:white}
+.capture-icon{width:32px;height:32px;fill:white}
 </style>
 </head>
 <body>
@@ -589,7 +591,7 @@ html,body{height:100%;overflow:hidden;background:#000;color:white}
 <video id="video" autoplay playsinline muted></video>
 
 <div class="top-bar">
-<h2>🩸 Captura guiada</h2>
+<h2>Captura guiada</h2>
 <span class="status" id="status">Iniciando camara...</span>
 </div>
 
@@ -602,15 +604,21 @@ html,body{height:100%;overflow:hidden;background:#000;color:white}
 </div>
 
 <div class="brightness-control">
-<span>☀️</span>
+<span>Brillo</span>
 <input type="range" id="brightness" min="50" max="200" value="100">
 <span id="brightnessValue">100%</span>
 </div>
 
 <div class="main-controls">
-<button class="ctrl-btn" id="switchBtn" title="Cambiar camara">🔄</button>
-<button class="ctrl-btn capture-btn" id="captureBtn" title="Capturar" disabled>📸</button>
-<button class="ctrl-btn" id="retakeBtn" title="Tomar otra" style="display:none">↺</button>
+<button class="ctrl-btn" id="switchBtn" title="Cambiar camara">
+<svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 9V7c0-1.65-1.35-3-3-3h-4c-.35 0-.68-.13-.95-.36L11.71 2.5c-.37-.31-.83-.5-1.3-.5H6C4.35 2 3 3.35 3 5v2c0 1.1.9 2 2 2h1c.55 0 1 .45 1 1v1c0 1.1.9 2 2 2h4c1.1 0 2 .9 2 2v1c0 .55.45 1 1 1h1c1.1 0 2-.9 2-2v-2c0-1.1-.9-2-2-2h-1c-.55 0-1-.45-1-1v-1c0-1.1-.9-2-2-2H8c-1.1 0-2-.9-2-2V5c0-.55.45-1 1-1h3.59l1.71 1.14C12.95 5.63 13.76 6 14.59 6H18c.55 0 1 .45 1 1v2c0 .55.45 1 1 1s1-.45 1-1z"/></svg>
+</button>
+<button class="ctrl-btn capture-btn" id="captureBtn" title="Capturar" disabled>
+<svg class="capture-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+</button>
+<button class="ctrl-btn" id="retakeBtn" title="Tomar otra" style="display:none">
+<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+</button>
 </div>
 </div>
 
@@ -621,7 +629,7 @@ html,body{height:100%;overflow:hidden;background:#000;color:white}
 </div>
 
 <div class="camera-error" id="cameraError" style="display:none">
-<h3>⚠️ No se pudo acceder a la camara</h3>
+<h3>No se pudo acceder a la camara</h3>
 <p id="errorMsg">Verifica los permisos e intenta de nuevo.</p>
 </div>
 </div>
@@ -795,7 +803,7 @@ captureBtn.style.display = 'none';
 if(data.error){
 resultCard.className = 'result-card error';
 resultCard.innerHTML = `
-<h3>⚠️ Atencion</h3>
+<h3>Atencion</h3>
 <p style="margin:15px 0;color:#4b5563">${data.error}</p>
 <button class="result-btn" onclick="document.getElementById('retakeBtn').click()">Intentar de nuevo</button>
 `;
