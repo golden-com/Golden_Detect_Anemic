@@ -78,7 +78,7 @@ def validar_imagen_es_ojo(ruta_imagen):
         with open(ruta_imagen, "rb") as f:
             image_data = base64.b64encode(f.read()).decode('utf-8')
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={GEMINI_API_KEY}"
 
         partes = []
 
@@ -129,7 +129,7 @@ def consultar_gemini(ruta_imagen):
         with open(ruta_imagen, "rb") as f:
             image_data = base64.b64encode(f.read()).decode('utf-8')
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={GEMINI_API_KEY}"
 
         payload = {
             "contents": [{
