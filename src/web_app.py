@@ -6,6 +6,7 @@ import numpy as np
 import uuid
 import time
 import urllib.parse
+import re
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
@@ -24,6 +25,14 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 
 app = Flask(__name__)
+
+PATRON_MOVIL = re.compile(r"Android|iPhone|iPad|iPod|Mobile|BlackBerry|IEMobile|Opera Mini", re.I)
+
+
+def es_dispositivo_movil():
+    ua = request.headers.get('User-Agent', '')
+    return bool(PATRON_MOVIL.search(ua))
+
 
 try:
     model = load_model('models/final_model.h5')
@@ -70,6 +79,31 @@ if not GEMINI_API_KEY:
     print("ADVERTENCIA: GEMINI_API_KEY no esta configurada. La verificacion de ojo/conjuntiva no puede ejecutarse.")
 
 
+def llamar_gemini_con_reintentos(url, payload, intentos=3, espera_segundos=1.5):
+    ultimo_error = None
+    for intento in range(1, intentos + 1):
+        try:
+            response = requests.post(url, json=payload, timeout=15)
+            response.raise_for_status()
+            return response.json(), None
+        except requests.exceptions.HTTPError as e:
+            codigo = e.response.status_code if e.response is not None else None
+            ultimo_error = e
+            if codigo in (503, 429, 500, 502, 504) and intento < intentos:
+                print(f"[Gemini] Error {codigo} en intento {intento}/{intentos}, reintentando...")
+                time.sleep(espera_segundos)
+                continue
+            break
+        except Exception as e:
+            ultimo_error = e
+            if intento < intentos:
+                print(f"[Gemini] Error de conexion en intento {intento}/{intentos}, reintentando...")
+                time.sleep(espera_segundos)
+                continue
+            break
+    return None, ultimo_error
+
+
 def validar_imagen_es_ojo(ruta_imagen):
     if not GEMINI_API_KEY:
         return False, "LA VERIFICACION DE IMAGEN NO ESTA DISPONIBLE EN ESTE MOMENTO. Intenta de nuevo mas tarde."
@@ -104,9 +138,11 @@ def validar_imagen_es_ojo(ruta_imagen):
 
         payload = {"contents": [{"parts": partes}]}
 
-        response = requests.post(url, json=payload, timeout=15)
-        response.raise_for_status()
-        data = response.json()
+        data, error = llamar_gemini_con_reintentos(url, payload)
+        if error is not None:
+            print(f"[Validacion ojo] Error tras reintentos: {error}")
+            return False, "EL SERVICIO DE VERIFICACION NO RESPONDE EN ESTE MOMENTO. Espera unos segundos e intenta de nuevo."
+
         texto = data["candidates"][0]["content"]["parts"][0]["text"].strip().upper()
 
         print(f"[Validacion ojo] Respuesta de Gemini: {texto[:80]}")
@@ -144,9 +180,11 @@ def consultar_gemini(ruta_imagen):
             }]
         }
 
-        response = requests.post(url, json=payload, timeout=8)
-        response.raise_for_status()
-        data = response.json()
+        data, error = llamar_gemini_con_reintentos(url, payload)
+        if error is not None:
+            print(f"[Gemini] Error tras reintentos: {error}")
+            return None
+
         texto = data["candidates"][0]["content"]["parts"][0]["text"].strip().upper()
 
         if "ALTA" in texto:
@@ -162,9 +200,16 @@ def consultar_gemini(ruta_imagen):
 
 
 def analizar_imagen(temp_path):
-    ok_ojo, mensaje_ojo = validar_imagen_es_ojo(temp_path)
-    if not ok_ojo:
-        return {'error': mensaje_ojo}, 400
+    # ------------------------------------------------------------------
+    # Validacion de "es un ojo/conjuntiva" DESACTIVADA temporalmente por
+    # tiempo (presentacion en 4 dias). El sistema ahora deja pasar
+    # cualquier imagen directo al modelo, que trabaja principalmente con
+    # la coloracion de la region recibida. Para reactivar la validacion
+    # mas adelante, descomenta estas 3 lineas:
+    #
+    # ok_ojo, mensaje_ojo = validar_imagen_es_ojo(temp_path)
+    # if not ok_ojo:
+    #     return {'error': mensaje_ojo}, 400
 
     img = image.load_img(temp_path, target_size=(224, 224))
     img_array = image.img_to_array(img) / 255.0
@@ -322,8 +367,8 @@ PAGINA_PRINCIPAL = """
         #modalDetector .modal { max-width: 640px; padding: 44px 40px; }
         #modalDetector h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.4rem; text-align: center; margin: 0 0 6px; }
         #modalDetector .modal-sub { text-align: center; color: var(--text-faint); font-size: 0.85rem; margin: 0 0 30px; }
-        .option-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-        @media (max-width: 640px) { .option-grid { grid-template-columns: 1fr; } }
+        .option-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        @media (max-width: 480px) { .option-grid { grid-template-columns: 1fr; } }
         .option-card {
             background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px;
             padding: 26px 20px; text-align: left; cursor: pointer;
@@ -335,8 +380,6 @@ PAGINA_PRINCIPAL = """
         .option-icon svg { width: 20px; height: 20px; color: var(--accent); }
         .option-card h3 { font-size: 0.95rem; font-weight: 600; margin: 0 0 6px; }
         .option-card p { font-size: 0.78rem; color: var(--text-faint); margin: 0; line-height: 1.5; }
-        @media (max-width: 767px) { .solo-pc { display: none; } }
-        @media (min-width: 768px) { .solo-movil { display: none; } }
         .upload-box {
             border: 1.5px dashed var(--border); border-radius: 12px; padding: 30px 20px;
             text-align: center; cursor: pointer; transition: border-color .2s ease;
@@ -520,16 +563,19 @@ PAGINA_PRINCIPAL = """
                         <h3>Subir archivo</h3>
                         <p>Selecciona una foto ya tomada desde tu dispositivo.</p>
                     </button>
-                    <button class="option-card solo-movil" onclick="abrirCamara()">
+                    {% if es_movil %}
+                    <button class="option-card" onclick="abrirCamara()">
                         <div class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3"/></svg></div>
                         <h3>Tomar foto</h3>
                         <p>Usa la camara de tu celular.</p>
                     </button>
-                    <button class="option-card solo-pc" onclick="abrirQR()">
+                    {% else %}
+                    <button class="option-card" onclick="abrirQR()">
                         <div class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 14h3v3M14 18h3v3M21 21h-3"/></svg></div>
                         <h3>Usar mi celular</h3>
                         <p>Escanea un QR y toma la foto desde tu telefono.</p>
                     </button>
+                    {% endif %}
                 </div>
             </div>
             <div id="uploadSeccion" style="display:none;">
@@ -1045,7 +1091,7 @@ PAGINA_MOVIL = """
 
 @app.route('/')
 def home():
-    return render_template_string(PAGINA_PRINCIPAL)
+    return render_template_string(PAGINA_PRINCIPAL, es_movil=es_dispositivo_movil())
 
 
 @app.route('/m/<sesion_id>')
